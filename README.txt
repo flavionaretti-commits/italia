@@ -37,3 +37,8 @@ V2.2
 V2.2.1
 - Migliorata la posizione dei capoluoghi di provincia sulla carta: la proiezione geografica viene ora corretta localmente usando i 20 capoluoghi regionali già calibrati come punti di riferimento.
 - La modifica riguarda solo le coordinate dei capoluoghi provinciali e non cambia regioni, punteggi, modalità Studio, Italia fisica o Meraviglie.
+
+V2.2.2
+- Corretto l'abbinamento delle immagini delle Meraviglie d'Italia.
+- Eliminata la ricerca generica su Wikipedia: ciascuna delle 54 meraviglie è ora associata a una pagina Wikipedia precisa.
+- Se una pagina non fornisce una miniatura valida, l'app mostra il riquadro grafico di riserva invece di una fotografia potenzialmente sbagliata.

@@ -386,17 +386,122 @@ function hideWonderImage(){
   state.wonderImageToken=(state.wonderImageToken||0)+1;els.wonderImageCard.hidden=true;els.wonderImage.hidden=true;els.wonderImage.removeAttribute("src");els.wonderImageSource.hidden=true;els.wonderImageSource.removeAttribute("href");
 }
 function wonderFallbackEmoji(sub){return({monuments:"🏛️",places:"🏘️",archaeology:"🏺",nature:"🏞️"})[sub]||"🇮🇹"}
+
+/*
+ * Le Meraviglie non usano più una ricerca libera su Wikipedia:
+ * ogni voce è collegata a una pagina precisa. In questo modo, per esempio,
+ * "Torre di Pisa" non può più mostrare una foto generica della città di Pisa.
+ */
+const WONDER_WIKI_TITLES={
+  "wonder-colosseo":"Colosseo",
+  "wonder-san-pietro":"Basilica di San Pietro in Vaticano",
+  "wonder-trevi":"Fontana di Trevi",
+  "wonder-duomo-milano":"Duomo di Milano",
+  "wonder-mole":"Mole Antonelliana",
+  "wonder-san-marco":"Piazza San Marco",
+  "wonder-arena-verona":"Arena di Verona",
+  "wonder-torre-pisa":"Torre pendente di Pisa",
+  "wonder-duomo-firenze":"Cattedrale di Santa Maria del Fiore",
+  "wonder-ponte-vecchio":"Ponte Vecchio",
+  "wonder-reggia-caserta":"Reggia di Caserta",
+  "wonder-castel-del-monte":"Castel del Monte",
+  "wonder-assisi":"Basilica di San Francesco (Assisi)",
+  "wonder-san-nicola":"Basilica di San Nicola",
+  "wonder-santa-croce":"Basilica di Santa Croce (Lecce)",
+  "wonder-palazzo-ducale-urbino":"Palazzo Ducale (Urbino)",
+  "wonder-san-vitale":"Basilica di San Vitale",
+  "wonder-campo-siena":"Piazza del Campo",
+  "wonder-cinque-terre":"Cinque Terre",
+  "wonder-portofino":"Portofino",
+  "wonder-venezia":"Venezia",
+  "wonder-san-gimignano":"San Gimignano",
+  "wonder-civita":"Civita di Bagnoregio",
+  "wonder-sassi-matera":"Sassi di Matera",
+  "wonder-alberobello":"Trulli di Alberobello",
+  "wonder-positano":"Positano",
+  "wonder-amalfi":"Amalfi",
+  "wonder-taormina":"Taormina",
+  "wonder-erice":"Erice",
+  "wonder-orvieto":"Orvieto",
+  "wonder-burano":"Burano",
+  "wonder-pompei":"Scavi archeologici di Pompei",
+  "wonder-ercolano":"Scavi archeologici di Ercolano",
+  "wonder-valle-templi":"Valle dei Templi",
+  "wonder-teatro-taormina":"Teatro antico di Taormina",
+  "wonder-su-nuraxi":"Su Nuraxi",
+  "wonder-paestum":"Paestum",
+  "wonder-ostia-antica":"Ostia (città antica)",
+  "wonder-villa-adriana":"Villa Adriana",
+  "wonder-cerveteri":"Necropoli della Banditaccia",
+  "wonder-selinunte":"Selinunte",
+  "wonder-neapolis":"Parco archeologico della Neapolis",
+  "wonder-tre-cime":"Tre Cime di Lavaredo",
+  "wonder-braies":"Lago di Braies",
+  "wonder-marmore":"Cascata delle Marmore",
+  "wonder-gran-paradiso":"Parco nazionale del Gran Paradiso",
+  "wonder-frasassi":"Grotte di Frasassi",
+  "wonder-castellana":"Grotte di Castellana",
+  "wonder-scala-turchi":"Scala dei Turchi",
+  "wonder-costa-smeralda":"Costa Smeralda",
+  "wonder-cala-goloritze":"Cala Goloritzé",
+  "wonder-stromboli":"Stromboli",
+  "wonder-etna":"Etna",
+  "wonder-vesuvio":"Vesuvio"
+};
+
 async function loadWonderImage(item){
-  const token=(state.wonderImageToken||0)+1;state.wonderImageToken=token;els.wonderImageCard.hidden=false;els.wonderImage.hidden=true;els.wonderImageFallback.hidden=false;els.wonderImageFallback.textContent=wonderFallbackEmoji(item.sub);els.wonderImageSource.hidden=true;
+  const token=(state.wonderImageToken||0)+1;
+  state.wonderImageToken=token;
+  els.wonderImageCard.hidden=false;
+  els.wonderImage.hidden=true;
+  els.wonderImageFallback.hidden=false;
+  els.wonderImageFallback.textContent=wonderFallbackEmoji(item.sub);
+  els.wonderImageSource.hidden=true;
+
   try{
-    const qs=new URLSearchParams({action:"query",origin:"*",format:"json",generator:"search",gsrsearch:item.name,gsrnamespace:"0",gsrlimit:"3",prop:"pageimages|info",piprop:"thumbnail",pithumbsize:"520",inprop:"url"});
-    const res=await fetch("https://it.wikipedia.org/w/api.php?"+qs.toString());if(!res.ok)throw new Error("image search");
-    const json=await res.json();if(token!==state.wonderImageToken)return;const pages=Object.values(json.query?.pages||{}),page=pages.find(p=>p.thumbnail?.source)||pages[0];
-    if(!page?.thumbnail?.source)throw new Error("no image");
-    els.wonderImage.onload=()=>{if(token===state.wonderImageToken){els.wonderImage.hidden=false;els.wonderImageFallback.hidden=true}};
-    els.wonderImage.onerror=()=>{els.wonderImage.hidden=true;els.wonderImageFallback.hidden=false};
-    els.wonderImage.src=page.thumbnail.source;els.wonderImageSource.href=page.fullurl||"https://it.wikipedia.org/";els.wonderImageSource.hidden=false;
-  }catch(e){if(token===state.wonderImageToken){els.wonderImage.hidden=true;els.wonderImageFallback.hidden=false;els.wonderImageSource.hidden=true}}
+    const wikiTitle=WONDER_WIKI_TITLES[item.id]||item.name;
+    const qs=new URLSearchParams({
+      action:"query",
+      origin:"*",
+      format:"json",
+      redirects:"1",
+      titles:wikiTitle,
+      prop:"pageimages|info",
+      piprop:"thumbnail",
+      pithumbsize:"640",
+      inprop:"url"
+    });
+    const res=await fetch("https://it.wikipedia.org/w/api.php?"+qs.toString());
+    if(!res.ok)throw new Error("image page");
+    const json=await res.json();
+    if(token!==state.wonderImageToken)return;
+
+    const pages=Object.values(json.query?.pages||{});
+    const page=pages.find(p=>!p.missing&&p.thumbnail?.source);
+    if(!page?.thumbnail?.source)throw new Error("no exact image");
+
+    els.wonderImage.onload=()=>{
+      if(token===state.wonderImageToken){
+        els.wonderImage.hidden=false;
+        els.wonderImageFallback.hidden=true;
+      }
+    };
+    els.wonderImage.onerror=()=>{
+      els.wonderImage.hidden=true;
+      els.wonderImageFallback.hidden=false;
+    };
+    els.wonderImage.src=page.thumbnail.source;
+    els.wonderImage.alt="Foto: "+item.name;
+    els.wonderImageSource.href=page.fullurl||("https://it.wikipedia.org/wiki/"+encodeURIComponent(wikiTitle.replace(/ /g,"_")));
+    els.wonderImageSource.hidden=false;
+  }catch(e){
+    if(token===state.wonderImageToken){
+      // Meglio nessuna foto che una foto sbagliata.
+      els.wonderImage.hidden=true;
+      els.wonderImageFallback.hidden=false;
+      els.wonderImageSource.hidden=true;
+    }
+  }
 }
 
 function renderStatus(){
