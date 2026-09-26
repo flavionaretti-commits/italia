@@ -24,7 +24,8 @@ const els={
   progressLabel:$("#progressLabel"),scoreLabel:$("#scoreLabel"),scoreboard:$("#scoreboard"),handoff:$("#handoff"),
   handoffName:$("#handoffName"),handoffBtn:$("#handoffBtn"),finalOverlay:$("#finalOverlay"),finalContent:$("#finalContent"),
   homeBtn:$("#homeBtn"),themeBtn:$("#themeBtn"),soundBtn:$("#soundBtn"),infoBtn:$("#infoBtn"),infoDialog:$("#infoDialog"),
-  closeInfo:$("#closeInfo"),restartBtn:$("#restartBtn")
+  closeInfo:$("#closeInfo"),restartBtn:$("#restartBtn"),studyCapitalsBtn:$("#studyCapitalsBtn"),
+  wonderImageCard:$("#wonderImageCard"),wonderImage:$("#wonderImage"),wonderImageFallback:$("#wonderImageFallback"),wonderImageSource:$("#wonderImageSource")
 };
 
 const MAP={lonMin:6.50,lonMax:18.60,latMin:36.30,latMax:47.25,xMin:20,xMax:1310,yMin:35,yMax:1560,kmPerPx:.82};
@@ -34,6 +35,8 @@ function geoToMap(lat,lon){
   return{x,y};
 }
 function itemXY(item){return Number.isFinite(item.x)&&Number.isFinite(item.y)?{x:item.x,y:item.y}:geoToMap(item.lat,item.lon)}
+const REGION_CAPITAL_NAMES=new Set(REGIONS.map(r=>r.capital));
+const PROVINCE_ONLY=PROVINCES.filter(p=>!REGION_CAPITAL_NAMES.has(p.name));
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 
 function saveSetup(){
@@ -97,8 +100,8 @@ function buildMap(){
 }
 function regionPath(i){return $(`.region-shape[data-index="${i}"]`,els.regionsLayer)}
 function resetMapVisuals(){
-  $$(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("prompt-highlight","correct-highlight","wrong-highlight","dim"));
-  els.markerLayer.innerHTML="";els.lineLayer.innerHTML="";
+  $(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("prompt-highlight","correct-highlight","wrong-highlight","dim"));
+  els.markerLayer.innerHTML="";els.lineLayer.innerHTML="";hideWonderImage();
 }
 function setTheme(theme){
   state.theme=theme;document.documentElement.dataset.theme=theme;els.themeBtn.textContent=theme==="dark"?"☀️":"🌙";
@@ -140,16 +143,45 @@ function startGame(){
   state.categories=cats;state.physicalSubs=physicalSubs;state.wonderSubs=wonderSubs;state.direction=els.direction.value;state.timerSeconds=+els.timer.value;
   state.scores=state.players.map(()=>0);state.perPlayerAsked=state.players.map(()=>0);state.questionPools={};state.current=null;state.locked=false;
   saveSetup();els.setupScreen.hidden=true;els.gameScreen.hidden=false;els.endTrainingBtn.hidden=state.mode!=="training";els.finalOverlay.hidden=true;
+  els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode");els.mapControls.innerHTML="";
   renderScoreboard();nextQuestion(true);
 }
 function showSetupError(msg){$("#setupError").textContent=msg;tone("bad")}
+
+function startStudyMode(){
+  clearTimer();state.mode="study";state.current=null;state.locked=true;
+  els.setupScreen.hidden=true;els.gameScreen.hidden=false;els.finalOverlay.hidden=true;els.handoff.hidden=true;
+  els.timerWrap.hidden=true;els.scoreLabel.hidden=true;els.scoreboard.hidden=true;els.endTrainingBtn.hidden=true;
+  els.oralControls.hidden=true;els.mapControls.hidden=false;els.judgeControls.hidden=true;els.revealBtn.hidden=true;
+  els.map.classList.add("study-mode");resetMapVisuals();
+  els.playerLabel.textContent="MODALITÀ STUDIO";els.progressLabel.textContent=`20 regionali · ${PROVINCE_ONLY.length} provinciali`;
+  els.promptKicker.textContent="CAPOLUOGHI";els.promptText.textContent="Esplora la carta";
+  els.promptHint.textContent="Tocca un punto per scoprire il nome della città.";
+  els.mapControls.innerHTML=`<div class="study-legend"><div class="study-legend-row"><span class="legend-dot region"></span> Capoluogo di regione</div><div class="study-legend-row"><span class="legend-dot province"></span> Capoluogo di provincia</div></div>`;
+  hideResult();renderStudyCapitals();
+}
+function renderStudyCapitals(){
+  REGIONS.forEach(r=>addStudyMarker({name:r.capital,x:r.x,y:r.y,type:"region"}));
+  PROVINCE_ONLY.forEach(p=>{const xy=itemXY(p);addStudyMarker({name:p.name,x:xy.x,y:xy.y,type:"province"})});
+}
+function addStudyMarker(city){
+  const g=document.createElementNS("http://www.w3.org/2000/svg","g");g.setAttribute("class",`study-marker ${city.type}`);
+  g.setAttribute("tabindex","0");g.setAttribute("role","button");g.setAttribute("aria-label","Scopri il nome del capoluogo");
+  const c=document.createElementNS("http://www.w3.org/2000/svg","circle");c.setAttribute("cx",city.x);c.setAttribute("cy",city.y);c.setAttribute("r",city.type==="region"?12:8);g.appendChild(c);
+  const show=ev=>{ev.preventDefault();ev.stopPropagation();showStudyCity(city)};
+  g.addEventListener("pointerdown",show);g.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" ")show(ev)});
+  els.markerLayer.appendChild(g);
+}
+function showStudyCity(city){
+  els.resultBox.hidden=false;els.resultTitle.textContent=city.name;els.resultText.textContent=city.type==="region"?"Capoluogo di regione":"Capoluogo di provincia";els.nextBtn.hidden=true;tone("click");
+}
 
 function regionItems(){return REGIONS.map((r,i)=>({id:`region-${i}`,name:r.name,kind:"region",cat:"regions",regionIndex:i,region:r}))}
 function capitalItems(){return REGIONS.map((r,i)=>({id:`capital-${i}`,name:r.capital,kind:"point",cat:"capitals",x:r.x,y:r.y,region:r,tolerance:8,maxDistance:250}))}
 function getCandidates(cat){
   if(cat==="regions")return regionItems();
   if(cat==="capitals")return capitalItems();
-  if(cat==="provinces")return PROVINCES;
+  if(cat==="provinces")return PROVINCE_ONLY;
   if(cat==="physical")return PHYSICAL.filter(i=>state.physicalSubs.includes(i.sub));
   if(cat==="wonders")return WONDERS.filter(i=>state.wonderSubs.includes(i.sub));
   return[];
@@ -205,6 +237,7 @@ function locateHint(item){
 }
 function renderQuestion(){
   resetMapVisuals();const q=state.current;els.promptKicker.textContent=questionKicker(q);
+  if(q.cat==="wonders")loadWonderImage(q.item);
   if(q.dir==="nameToMap"){
     els.oralControls.hidden=true;els.mapControls.hidden=false;els.promptText.textContent=`Trova ${q.item.name}`;
     els.promptHint.textContent=q.cat==="regions"?"Tocca o clicca la regione sulla carta.":locateHint(q.item);
@@ -214,6 +247,23 @@ function renderQuestion(){
     if(q.item.kind==="region")regionPath(q.item.regionIndex)?.classList.add("prompt-highlight");else showTargetFeature(q.item,"?",false);
   }
 }
+function hideWonderImage(){
+  state.wonderImageToken=(state.wonderImageToken||0)+1;els.wonderImageCard.hidden=true;els.wonderImage.hidden=true;els.wonderImage.removeAttribute("src");els.wonderImageSource.hidden=true;els.wonderImageSource.removeAttribute("href");
+}
+function wonderFallbackEmoji(sub){return({monuments:"🏛️",places:"🏘️",archaeology:"🏺",nature:"🏞️"})[sub]||"🇮🇹"}
+async function loadWonderImage(item){
+  const token=(state.wonderImageToken||0)+1;state.wonderImageToken=token;els.wonderImageCard.hidden=false;els.wonderImage.hidden=true;els.wonderImageFallback.hidden=false;els.wonderImageFallback.textContent=wonderFallbackEmoji(item.sub);els.wonderImageSource.hidden=true;
+  try{
+    const qs=new URLSearchParams({action:"query",origin:"*",format:"json",generator:"search",gsrsearch:item.name,gsrnamespace:"0",gsrlimit:"3",prop:"pageimages|info",piprop:"thumbnail",pithumbsize:"520",inprop:"url"});
+    const res=await fetch("https://it.wikipedia.org/w/api.php?"+qs.toString());if(!res.ok)throw new Error("image search");
+    const json=await res.json();if(token!==state.wonderImageToken)return;const pages=Object.values(json.query?.pages||{}),page=pages.find(p=>p.thumbnail?.source)||pages[0];
+    if(!page?.thumbnail?.source)throw new Error("no image");
+    els.wonderImage.onload=()=>{if(token===state.wonderImageToken){els.wonderImage.hidden=false;els.wonderImageFallback.hidden=true}};
+    els.wonderImage.onerror=()=>{els.wonderImage.hidden=true;els.wonderImageFallback.hidden=false};
+    els.wonderImage.src=page.thumbnail.source;els.wonderImageSource.href=page.fullurl||"https://it.wikipedia.org/";els.wonderImageSource.hidden=false;
+  }catch(e){if(token===state.wonderImageToken){els.wonderImage.hidden=true;els.wonderImageFallback.hidden=false;els.wonderImageSource.hidden=true}}
+}
+
 function renderStatus(){
   const p=state.activePlayer;els.playerLabel.textContent=state.mode==="training"?"ALLENAMENTO":state.players[p].toUpperCase();
   els.scoreLabel.textContent=`${state.scores[p]||0} pt`;els.progressLabel.textContent=state.mode==="training"?"modalità continua":`${state.perPlayerAsked[p]} / ${state.questionsPerPlayer}`;
@@ -338,7 +388,7 @@ function endTraining(){
   els.finalContent.innerHTML=`<div class="final-cup">🧭</div><h2>Allenamento concluso</h2><p>Hai totalizzato <strong>${state.scores[0]||0} punti</strong>.</p><button type="button" class="primary big" id="playAgainFinal">TORNA ALLA HOME</button>`;
   $("#playAgainFinal").addEventListener("click",goHome);
 }
-function goHome(){clearTimer();els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;resetMapVisuals()}
+function goHome(){clearTimer();els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode");els.mapControls.innerHTML="";resetMapVisuals()}
 function openInfo(){els.infoDialog.showModal?els.infoDialog.showModal():els.infoDialog.setAttribute("open","")}
 function closeInfo(){els.infoDialog.close?els.infoDialog.close():els.infoDialog.removeAttribute("open")}
 
@@ -347,10 +397,10 @@ els.questions.addEventListener("change",saveSetup);els.timer.addEventListener("c
 els.training.addEventListener("change",()=>{updateTrainingUI();saveSetup()});
 [els.categoryRegion,els.categoryCapitals,els.categoryProvinces,els.categoryPhysical,els.categoryWonders].forEach(el=>el.addEventListener("change",()=>{updateCategoryOptions();saveSetup()}));
 $$(".subcat-physical,.subcat-wonders").forEach(el=>el.addEventListener("change",saveSetup));
-els.direction.addEventListener("change",saveSetup);els.playerNames.addEventListener("input",saveSetup);els.start.addEventListener("click",startGame);
+els.direction.addEventListener("change",saveSetup);els.playerNames.addEventListener("input",saveSetup);els.start.addEventListener("click",startGame);els.studyCapitalsBtn.addEventListener("click",startStudyMode);
 els.revealBtn.addEventListener("click",revealAnswer);els.correctBtn.addEventListener("click",()=>judge(true));els.wrongBtn.addEventListener("click",()=>judge(false));
 els.nextBtn.addEventListener("click",()=>{tone("next");nextQuestion(false)});els.handoffBtn.addEventListener("click",()=>{els.handoff.hidden=true;tone("next");startTimer()});
-els.endTrainingBtn.addEventListener("click",endTraining);els.homeBtn.addEventListener("click",()=>{if(confirm("Vuoi uscire dalla partita e tornare alla home?"))goHome()});
+els.endTrainingBtn.addEventListener("click",endTraining);els.homeBtn.addEventListener("click",()=>{if(state.mode==="study"||confirm("Vuoi uscire dalla partita e tornare alla home?"))goHome()});
 els.themeBtn.addEventListener("click",()=>setTheme(state.theme==="dark"?"light":"dark"));els.soundBtn.addEventListener("click",()=>setSound(!state.sound));
 els.infoBtn.addEventListener("click",openInfo);els.closeInfo.addEventListener("click",closeInfo);els.restartBtn.addEventListener("click",()=>{closeInfo();goHome()});
 els.infoDialog.addEventListener("click",e=>{if(e.target===els.infoDialog)closeInfo()});

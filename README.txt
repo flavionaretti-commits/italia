@@ -1,4 +1,4 @@
-ITALIA! – PWA v2.0
+ITALIA! – PWA v2.1
 
 CONTENUTO
 - Regioni
@@ -22,3 +22,8 @@ Il logo tricolore in alto a sinistra esegue periodicamente una breve animazione 
 CREDITI
 Idea e progetto didattico: Flavio Naretti
 Sviluppo: ChatGPT / OpenAI
+
+V2.1
+- I capoluoghi regionali non vengono più riproposti come "capoluoghi di provincia": le due categorie sono ora didatticamente separate.
+- Nuova modalità STUDIA I CAPOLUOGHI con tutti i punti sulla carta: arancione per i capoluoghi di regione, azzurro per gli altri capoluoghi di provincia; toccando un punto compare il nome.
+- Nelle Meraviglie d'Italia compare un riquadro fotografico nell'angolo superiore destro della carta. Le miniature sono cercate su Wikipedia/Wikimedia, vengono conservate dalla cache del browser e hanno un fallback locale.

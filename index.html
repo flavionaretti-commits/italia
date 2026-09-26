@@ -62,6 +62,7 @@
           <div class="group">
             <div class="group-title">MODALITÀ</div>
             <label class="check"><input id="trainingMode" type="checkbox"> Allenamento continuo</label>
+            <button id="studyCapitalsBtn" class="secondary study-launch" type="button">📍 STUDIA I CAPOLUOGHI</button>
           </div>
 
           <div class="group">
@@ -165,6 +166,14 @@
               <g id="markerLayer"></g>
             </svg>
           </div>
+          <div id="wonderImageCard" class="wonder-image-card" hidden aria-live="polite">
+            <div class="wonder-image-head">MERAVIGLIA D'ITALIA</div>
+            <div class="wonder-image-frame">
+              <img id="wonderImage" alt="Immagine della meraviglia da riconoscere" hidden>
+              <div id="wonderImageFallback" class="wonder-image-fallback" aria-hidden="true">🏛️</div>
+            </div>
+            <a id="wonderImageSource" class="wonder-image-source" target="_blank" rel="noopener noreferrer" hidden>Fonte: Wikipedia</a>
+          </div>
           <div id="handoff" class="handoff" hidden>
             <div class="handoff-card">
               <small>ORA TOCCA A</small>
@@ -226,11 +235,15 @@
       </ul>
       <h3>Allenamento</h3>
       <p>Le domande continuano finché decidi di terminare. Non c'è classifica tra giocatori.</p>
+      <h3>Modalità studio: capoluoghi</h3>
+      <p>Mostra contemporaneamente tutti i capoluoghi sulla carta. I <strong>capoluoghi di regione</strong> hanno un punto arancione più grande; gli altri <strong>capoluoghi di provincia</strong> un punto azzurro. Tocca un punto per scoprirne il nome.</p>
       <h3>Capoluoghi di provincia</h3>
-      <p>La modalità usa una <strong>versione scolastica tradizionale</strong>, pensata per l'apprendimento geografico e non per seguire in tempo reale ogni riforma degli enti amministrativi.</p>
+      <p>La modalità usa una <strong>versione scolastica tradizionale</strong>, pensata per l'apprendimento geografico e non per seguire in tempo reale ogni riforma degli enti amministrativi. Per evitare ambiguità nelle domande, una città che è anche capoluogo di regione viene proposta nella categoria <strong>Capoluoghi di regione</strong>, non in quella provinciale.</p>
+      <h3>Immagini delle Meraviglie</h3>
+      <p>Nelle domande sulle Meraviglie d'Italia compare un piccolo riquadro fotografico sulla carta. Le immagini provengono da Wikipedia/Wikimedia e vengono conservate nella cache del dispositivo dopo il primo caricamento; in assenza di rete resta disponibile un riquadro grafico di riserva.</p>
       <h3>Crediti</h3>
       <p>Idea e progetto didattico: <strong>Flavio Naretti</strong>.<br>Sviluppo: ChatGPT / OpenAI.</p>
-      <p class="muted">Versione 2.0 · I dati, le impostazioni e i punteggi restano sul dispositivo. La carta è stata vettorializzata dalla carta muta fornita per il progetto.</p>
+      <p class="muted">Versione 2.1 · I dati, le impostazioni e i punteggi restano sul dispositivo. La carta è stata vettorializzata dalla carta muta fornita per il progetto.</p>
       <button id="restartBtn" class="secondary" type="button">TORNA ALLA HOME</button>
     </div>
   </dialog>
