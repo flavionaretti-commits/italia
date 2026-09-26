@@ -53,3 +53,9 @@ V2.2.4
   Imperia, Genova e La Spezia più a nord; Massa e Livorno più a est;
   Venezia più a ovest; Messina più a sud; Reggio Calabria più a nord.
 - Savona resta sulla calibrazione già approvata.
+
+V2.2.5
+- Nella modalità STUDIA I CAPOLUOGHI è disponibile il pulsante RIPOSIZIONA.
+- Con RIPOSIZIONA attivo i puntini possono essere trascinati con dito o Apple Pencil.
+- Le correzioni vengono salvate in localStorage sul dispositivo e vengono riutilizzate anche nelle domande del gioco.
+- Il pulsante RIPRISTINA cancella tutte le correzioni personali e torna alle coordinate predefinite dell'app.

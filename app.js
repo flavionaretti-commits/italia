@@ -8,7 +8,7 @@ const state={
   wonderSubs:["monuments","places","archaeology","nature"],direction:"mixed",timerSeconds:0,
   current:null,scores:[],timerId:null,timeLeft:0,timerStartedAt:0,timerStoppedRatio:1,locked:false,
   questionPools:{},sound:localStorage.getItem("italia-sound")!=="off",theme:localStorage.getItem("italia-theme")||"light",
-  mapFullscreen:false,mapView:{x:0,y:0,w:1337,h:1600},wonderImageToken:0
+  mapFullscreen:false,mapView:{x:0,y:0,w:1337,h:1600},wonderImageToken:0,repositioning:false
 };
 
 const els={
@@ -90,9 +90,19 @@ const CITY_POINT_OFFSETS={
   "Messina":{dx:0,dy:10},
   "Reggio Calabria":{dx:0,dy:-10}
 };
+let USER_CITY_OFFSETS={};
+try{
+  const saved=JSON.parse(localStorage.getItem("italia-city-offsets")||"{}");
+  if(saved&&typeof saved==="object")USER_CITY_OFFSETS=saved;
+}catch(e){}
+
+function saveUserCityOffsets(){
+  localStorage.setItem("italia-city-offsets",JSON.stringify(USER_CITY_OFFSETS));
+}
 function applyCityOffset(name,p){
-  const o=CITY_POINT_OFFSETS[name];
-  return o?{x:p.x+o.dx,y:p.y+o.dy}:p;
+  const built=CITY_POINT_OFFSETS[name]||{dx:0,dy:0};
+  const user=USER_CITY_OFFSETS[name]||{dx:0,dy:0};
+  return{x:p.x+built.dx+user.dx,y:p.y+built.dy+user.dy};
 }
 function itemXY(item){
   let p;
@@ -308,24 +318,104 @@ function startStudyMode(){
   els.map.classList.add("study-mode");resetMapVisuals();
   els.playerLabel.textContent="MODALITÀ STUDIO";els.progressLabel.textContent=`20 regionali · ${PROVINCE_ONLY.length} provinciali`;
   els.promptKicker.textContent="CAPOLUOGHI";els.promptText.textContent="Esplora la carta";
+  state.repositioning=false;
   els.promptHint.textContent="Tocca un punto per scoprire il nome della città.";
-  els.mapControls.innerHTML=`<div class="study-legend"><div class="study-legend-row"><span class="legend-dot region"></span> Capoluogo di regione</div><div class="study-legend-row"><span class="legend-dot province"></span> Capoluogo di provincia</div></div>`;
+  els.mapControls.innerHTML=`
+    <div class="study-legend">
+      <div class="study-legend-row"><span class="legend-dot region"></span> Capoluogo di regione</div>
+      <div class="study-legend-row"><span class="legend-dot province"></span> Capoluogo di provincia</div>
+    </div>
+    <div class="study-edit-actions">
+      <button id="repositionBtn" type="button" class="secondary">✥ RIPOSIZIONA</button>
+      <button id="resetPositionsBtn" type="button" class="secondary">↶ RIPRISTINA</button>
+    </div>`;
+  $("#repositionBtn").addEventListener("click",toggleRepositionMode);
+  $("#resetPositionsBtn").addEventListener("click",resetSavedCityPositions);
   hideResult();renderStudyCapitals();
 }
 function renderStudyCapitals(){
+  els.markerLayer.innerHTML="";
   REGIONS.forEach(r=>{const p=applyCityOffset(r.capital,{x:r.x,y:r.y});addStudyMarker({name:r.capital,x:p.x,y:p.y,type:"region"})});
   PROVINCE_ONLY.forEach(p=>{const xy=itemXY(p);addStudyMarker({name:p.name,x:xy.x,y:xy.y,type:"province"})});
 }
+function toggleRepositionMode(){
+  state.repositioning=!state.repositioning;
+  els.map.classList.toggle("reposition-mode",state.repositioning);
+  const b=$("#repositionBtn");
+  if(b)b.textContent=state.repositioning?"✓ FINE RIPOSIZIONA":"✥ RIPOSIZIONA";
+  els.promptHint.textContent=state.repositioning
+    ?"Trascina un puntino nella posizione corretta: al rilascio viene memorizzato su questo dispositivo."
+    :"Tocca un punto per scoprire il nome della città.";
+  if(state.repositioning){
+    els.resultBox.hidden=false;els.resultTitle.textContent="Riposizionamento attivo";
+    els.resultText.textContent="Trascina i capoluoghi con dito o Apple Pencil. Le correzioni valgono anche nelle domande del gioco.";
+    els.nextBtn.hidden=true;
+  }else hideResult();
+}
+function resetSavedCityPositions(){
+  if(!Object.keys(USER_CITY_OFFSETS).length){
+    els.resultBox.hidden=false;els.resultTitle.textContent="Nessuna correzione salvata";
+    els.resultText.textContent="I puntini stanno già usando le posizioni predefinite dell'app.";els.nextBtn.hidden=true;return;
+  }
+  if(!confirm("Vuoi cancellare tutte le correzioni manuali dei capoluoghi salvate su questo dispositivo?"))return;
+  USER_CITY_OFFSETS={};localStorage.removeItem("italia-city-offsets");renderStudyCapitals();
+  els.resultBox.hidden=false;els.resultTitle.textContent="Posizioni ripristinate";
+  els.resultText.textContent="Sono tornate le posizioni predefinite dell'app.";els.nextBtn.hidden=true;
+}
 function addStudyMarker(city){
-  const g=document.createElementNS("http://www.w3.org/2000/svg","g");g.setAttribute("class",`study-marker ${city.type}`);
-  g.setAttribute("tabindex","0");g.setAttribute("role","button");g.setAttribute("aria-label","Scopri il nome del capoluogo");
-  const c=document.createElementNS("http://www.w3.org/2000/svg","circle");c.setAttribute("cx",city.x);c.setAttribute("cy",city.y);c.setAttribute("r",city.type==="region"?12:8);g.appendChild(c);
-  const show=ev=>{ev.preventDefault();ev.stopPropagation();showStudyCity(city)};
-  g.addEventListener("click",show);g.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" ")show(ev)});
+  const g=document.createElementNS("http://www.w3.org/2000/svg","g");
+  g.setAttribute("class",`study-marker ${city.type}`);
+  g.setAttribute("tabindex","0");g.setAttribute("role","button");
+  g.setAttribute("aria-label",state.repositioning?"Trascina "+city.name:"Scopri il nome del capoluogo");
+  g.dataset.city=city.name;
+  const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("cx",city.x);c.setAttribute("cy",city.y);c.setAttribute("r",city.type==="region"?12:8);g.appendChild(c);
+
+  let drag=null;
+  g.addEventListener("pointerdown",ev=>{
+    if(!state.repositioning)return;
+    ev.preventDefault();ev.stopPropagation();
+    const p=svgPointFromClient(ev.clientX,ev.clientY);if(!p)return;
+    drag={pointerId:ev.pointerId,startPointer:p,startCity:{x:+c.getAttribute("cx"),y:+c.getAttribute("cy")},moved:false};
+    try{g.setPointerCapture(ev.pointerId)}catch(e){}
+    g.classList.add("dragging");
+  });
+  g.addEventListener("pointermove",ev=>{
+    if(!state.repositioning||!drag||drag.pointerId!==ev.pointerId)return;
+    ev.preventDefault();ev.stopPropagation();
+    const p=svgPointFromClient(ev.clientX,ev.clientY);if(!p)return;
+    const dx=p.x-drag.startPointer.x,dy=p.y-drag.startPointer.y;
+    if(Math.hypot(dx,dy)>1.5)drag.moved=true;
+    c.setAttribute("cx",drag.startCity.x+dx);c.setAttribute("cy",drag.startCity.y+dy);
+  });
+  const finishDrag=ev=>{
+    if(!drag||drag.pointerId!==ev.pointerId)return;
+    ev.preventDefault();ev.stopPropagation();
+    const nx=+c.getAttribute("cx"),ny=+c.getAttribute("cy");
+    if(drag.moved){
+      const old=USER_CITY_OFFSETS[city.name]||{dx:0,dy:0};
+      USER_CITY_OFFSETS[city.name]={dx:old.dx+(nx-drag.startCity.x),dy:old.dy+(ny-drag.startCity.y)};
+      saveUserCityOffsets();
+      city.x=nx;city.y=ny;
+      els.resultBox.hidden=false;els.resultTitle.textContent=city.name+" riposizionata";
+      els.resultText.textContent="Nuova posizione memorizzata su questo dispositivo.";els.nextBtn.hidden=true;tone("click");
+    }
+    drag=null;g.classList.remove("dragging");
+  };
+  g.addEventListener("pointerup",finishDrag);g.addEventListener("pointercancel",finishDrag);
+
+  const show=ev=>{
+    if(state.repositioning)return;
+    ev.preventDefault();ev.stopPropagation();showStudyCity(city);
+  };
+  g.addEventListener("click",show);
+  g.addEventListener("keydown",ev=>{if(!state.repositioning&&(ev.key==="Enter"||ev.key===" "))show(ev)});
   els.markerLayer.appendChild(g);
 }
 function showStudyCity(city){
-  els.resultBox.hidden=false;els.resultTitle.textContent=city.name;els.resultText.textContent=city.type==="region"?"Capoluogo di regione":"Capoluogo di provincia";els.nextBtn.hidden=true;tone("click");
+  els.resultBox.hidden=false;els.resultTitle.textContent=city.name;
+  els.resultText.textContent=city.type==="region"?"Capoluogo di regione":"Capoluogo di provincia";
+  els.nextBtn.hidden=true;tone("click");
 }
 
 function regionItems(){return REGIONS.map((r,i)=>({id:`region-${i}`,name:r.name,kind:"region",cat:"regions",regionIndex:i,region:r}))}
@@ -642,7 +732,7 @@ function endTraining(){
   els.finalContent.innerHTML=`<div class="final-cup">🧭</div><h2>Allenamento concluso</h2><p>Hai totalizzato <strong>${state.scores[0]||0} punti</strong>.</p><button type="button" class="primary big" id="playAgainFinal">TORNA ALLA HOME</button>`;
   $("#playAgainFinal").addEventListener("click",goHome);
 }
-function goHome(){clearTimer();toggleMapFullscreen(false);els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode");els.mapControls.innerHTML="";resetMapVisuals()}
+function goHome(){clearTimer();state.repositioning=false;els.map.classList.remove("reposition-mode");toggleMapFullscreen(false);els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode");els.mapControls.innerHTML="";resetMapVisuals()}
 function openInfo(){els.infoDialog.showModal?els.infoDialog.showModal():els.infoDialog.setAttribute("open","")}
 function closeInfo(){els.infoDialog.close?els.infoDialog.close():els.infoDialog.removeAttribute("open")}
 

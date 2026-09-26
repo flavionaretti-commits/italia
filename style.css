@@ -324,3 +324,19 @@ body.map-fullscreen-open{overflow:hidden;overscroll-behavior:none}
   .game-layout.map-fullscreen .wonder-image-card{width:31vw;min-width:115px}
   .map-zoom-controls button{min-width:40px;height:40px}
 }
+
+/* ITALIA! v2.2.5 – riposizionamento manuale dei capoluoghi */
+.study-edit-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.study-edit-actions button{min-height:44px}
+.reposition-mode .study-marker{cursor:grab}
+.reposition-mode .study-marker circle{
+  stroke:var(--gold);stroke-width:5;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));
+  touch-action:none
+}
+.reposition-mode .study-marker.dragging{cursor:grabbing}
+.reposition-mode .study-marker.dragging circle{
+  stroke:var(--text);stroke-width:7;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.42))
+}
+@media(max-width:520px){.study-edit-actions{grid-template-columns:1fr}}
