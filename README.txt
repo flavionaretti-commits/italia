@@ -47,3 +47,9 @@ V2.2.3
 - Micro-correzione manuale dei quattro capoluoghi liguri sulla carta, senza alterare la calibrazione generale:
   Genova -12 px in verticale, Imperia -10 px, Savona -10 px, La Spezia -8 px.
 - La correzione vale sia nel gioco sia nella modalità Studio.
+
+V2.2.4
+- Rifinitura manuale delle posizioni cittadine sulla carta:
+  Imperia, Genova e La Spezia più a nord; Massa e Livorno più a est;
+  Venezia più a ovest; Messina più a sud; Reggio Calabria più a nord.
+- Savona resta sulla calibrazione già approvata.

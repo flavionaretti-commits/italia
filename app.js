@@ -80,10 +80,15 @@ function calibratedCityToMap(lat,lon){
 }
 
 const CITY_POINT_OFFSETS={
-  "Genova":{dx:0,dy:-12},
-  "Imperia":{dx:0,dy:-10},
+  "Genova":{dx:0,dy:-20},
+  "Imperia":{dx:0,dy:-18},
   "Savona":{dx:0,dy:-10},
-  "La Spezia":{dx:0,dy:-8}
+  "La Spezia":{dx:0,dy:-16},
+  "Massa":{dx:10,dy:0},
+  "Livorno":{dx:12,dy:0},
+  "Venezia":{dx:-10,dy:0},
+  "Messina":{dx:0,dy:10},
+  "Reggio Calabria":{dx:0,dy:-10}
 };
 function applyCityOffset(name,p){
   const o=CITY_POINT_OFFSETS[name];
