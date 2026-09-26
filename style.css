@@ -270,3 +270,57 @@ dialog::backdrop{background:rgba(0,0,0,.48);backdrop-filter:blur(5px)}
 .wonder-image-source:hover{text-decoration:underline}
 @media(max-width:850px){.wonder-image-card{width:min(31%,220px);min-width:145px;top:10px;right:10px;padding:7px}}
 @media(max-width:520px){.wonder-image-card{width:38%;min-width:128px;top:8px;right:8px;border-radius:13px}.wonder-image-head{font-size:8px;margin-bottom:5px}.wonder-image-fallback{font-size:38px}}
+
+/* ITALIA! v2.2 – mappa a tutto schermo, zoom e Apple Pencil */
+.map-zoom-controls{
+  position:absolute;left:14px;bottom:14px;z-index:18;
+  display:flex;align-items:center;gap:6px;padding:6px;border-radius:15px;
+  background:color-mix(in srgb,var(--panel) 90%,transparent);
+  border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.16);backdrop-filter:blur(8px)
+}
+.map-zoom-controls button{
+  min-width:44px;height:42px;padding:0 10px;border:1px solid var(--line);
+  border-radius:11px;background:var(--panel2);color:var(--text);
+  font:900 18px/1 system-ui;cursor:pointer;touch-action:manipulation
+}
+.map-zoom-controls #zoomResetBtn{font-size:12px;min-width:58px}
+#italyMap{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.game-layout.map-fullscreen{
+  position:fixed;inset:0;z-index:1000;display:block;width:100vw;height:100dvh;
+  margin:0;padding:0;background:var(--sea)
+}
+.game-layout.map-fullscreen .map-card{
+  position:absolute;inset:0;border:0;border-radius:0;box-shadow:none;min-height:0
+}
+.game-layout.map-fullscreen .map-stage{width:100%;height:100dvh;min-height:0;padding:0}
+.game-layout.map-fullscreen .play-panel{
+  position:absolute;z-index:22;
+  top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));
+  width:min(330px,42vw);max-height:calc(100dvh - 20px);overflow:auto;padding:12px;border-radius:18px;
+  background:color-mix(in srgb,var(--panel) 91%,transparent);
+  box-shadow:0 10px 30px rgba(0,0,0,.19);backdrop-filter:blur(10px)
+}
+.game-layout.map-fullscreen .play-panel .scoreboard{display:none}
+.game-layout.map-fullscreen .play-panel #homeBtn,
+.game-layout.map-fullscreen .play-panel #endTrainingBtn{display:none}
+.game-layout.map-fullscreen .play-panel .panel-footer{margin-top:8px;padding-top:0}
+.game-layout.map-fullscreen .play-panel #mapFullscreenBtn{width:100%;flex:1}
+.game-layout.map-fullscreen .prompt{font-size:clamp(20px,2.4vw,30px);margin-bottom:5px}
+.game-layout.map-fullscreen .hint{font-size:12px;margin-bottom:9px}
+.game-layout.map-fullscreen .kicker{font-size:11px;margin-bottom:5px}
+.game-layout.map-fullscreen .wonder-image-card{top:auto;right:16px;bottom:16px;width:min(250px,27vw)}
+body.map-fullscreen-open{overflow:hidden;overscroll-behavior:none}
+@media(max-width:720px){
+  .game-layout.map-fullscreen .play-panel{
+    width:min(300px,45vw);top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));
+    padding:10px;border-radius:15px
+  }
+  .game-layout.map-fullscreen .wonder-image-card{right:8px;bottom:8px;width:28vw;min-width:130px}
+  .map-zoom-controls{left:8px;bottom:max(8px,env(safe-area-inset-bottom))}
+}
+@media(max-width:520px){
+  .game-layout.map-fullscreen .play-panel{width:48vw}
+  .game-layout.map-fullscreen .hint{display:none}
+  .game-layout.map-fullscreen .wonder-image-card{width:31vw;min-width:115px}
+  .map-zoom-controls button{min-width:40px;height:40px}
+}

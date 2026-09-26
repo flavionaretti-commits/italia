@@ -1,4 +1,4 @@
-ITALIA! – PWA v2.1
+ITALIA! – PWA v2.2
 
 CONTENUTO
 - Regioni
@@ -27,3 +27,9 @@ V2.1
 - I capoluoghi regionali non vengono più riproposti come "capoluoghi di provincia": le due categorie sono ora didatticamente separate.
 - Nuova modalità STUDIA I CAPOLUOGHI con tutti i punti sulla carta: arancione per i capoluoghi di regione, azzurro per gli altri capoluoghi di provincia; toccando un punto compare il nome.
 - Nelle Meraviglie d'Italia compare un riquadro fotografico nell'angolo superiore destro della carta. Le miniature sono cercate su Wikipedia/Wikimedia, vengono conservate dalla cache del browser e hanno un fallback locale.
+
+V2.2
+- Modalità MAPPA a tutto schermo durante gioco e studio, ottimizzata anche per iPad in verticale.
+- Zoom affidabile con pulsanti + / − / reset, fino a 6×.
+- Pinch a due dita gestito direttamente dalla mappa; trascinamento con un dito quando la carta è ingrandita.
+- Apple Pencil lasciata libera per il tap preciso: la penna non attiva il trascinamento della carta.

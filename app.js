@@ -7,7 +7,8 @@ const state={
   categories:["regions","capitals"],physicalSubs:["seas","lakes","rivers","mountains","volcanoes","islands","coasts"],
   wonderSubs:["monuments","places","archaeology","nature"],direction:"mixed",timerSeconds:0,
   current:null,scores:[],timerId:null,timeLeft:0,timerStartedAt:0,timerStoppedRatio:1,locked:false,
-  questionPools:{},sound:localStorage.getItem("italia-sound")!=="off",theme:localStorage.getItem("italia-theme")||"light"
+  questionPools:{},sound:localStorage.getItem("italia-sound")!=="off",theme:localStorage.getItem("italia-theme")||"light",
+  mapFullscreen:false,mapView:{x:0,y:0,w:1337,h:1600},wonderImageToken:0
 };
 
 const els={
@@ -25,7 +26,9 @@ const els={
   handoffName:$("#handoffName"),handoffBtn:$("#handoffBtn"),finalOverlay:$("#finalOverlay"),finalContent:$("#finalContent"),
   homeBtn:$("#homeBtn"),themeBtn:$("#themeBtn"),soundBtn:$("#soundBtn"),infoBtn:$("#infoBtn"),infoDialog:$("#infoDialog"),
   closeInfo:$("#closeInfo"),restartBtn:$("#restartBtn"),studyCapitalsBtn:$("#studyCapitalsBtn"),
-  wonderImageCard:$("#wonderImageCard"),wonderImage:$("#wonderImage"),wonderImageFallback:$("#wonderImageFallback"),wonderImageSource:$("#wonderImageSource")
+  wonderImageCard:$("#wonderImageCard"),wonderImage:$("#wonderImage"),wonderImageFallback:$("#wonderImageFallback"),wonderImageSource:$("#wonderImageSource"),
+  gameLayout:$("#gameLayout"),mapFullscreenBtn:$("#mapFullscreenBtn"),mapZoomControls:$("#mapZoomControls"),
+  zoomInBtn:$("#zoomInBtn"),zoomOutBtn:$("#zoomOutBtn"),zoomResetBtn:$("#zoomResetBtn")
 };
 
 const MAP={lonMin:6.50,lonMax:18.60,latMin:36.30,latMax:47.25,xMin:20,xMax:1310,yMin:35,yMax:1560,kmPerPx:.82};
@@ -92,12 +95,98 @@ function buildMap(){
     const p=document.createElementNS("http://www.w3.org/2000/svg","path");
     p.setAttribute("d",REGION_PATHS[i]);p.setAttribute("class","region-shape");p.dataset.index=String(i);p.dataset.name=r.name;
     p.setAttribute("tabindex","0");p.setAttribute("role","button");p.setAttribute("aria-label",r.name);
-    p.addEventListener("pointerdown",ev=>onRegionTap(ev,i));
+    p.addEventListener("click",ev=>onRegionTap(ev,i));
     p.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();onRegionTap(ev,i)}});
     els.regionsLayer.appendChild(p);
   });
-  els.map.addEventListener("pointerdown",onMapTap);
+  els.map.addEventListener("click",onMapTap);
+  setupMapGestures();
 }
+
+const BASE_VIEW={x:0,y:0,w:1337,h:1600};
+let activeMapPointers=new Map(),pinchGesture=null,panGesture=null,suppressMapClickUntil=0;
+
+function applyMapView(view){
+  const minW=BASE_VIEW.w/6;
+  let w=Math.max(minW,Math.min(BASE_VIEW.w,view.w));
+  const ratio=BASE_VIEW.h/BASE_VIEW.w;
+  let h=w*ratio;
+  if(h>BASE_VIEW.h){h=BASE_VIEW.h;w=h/ratio}
+  const x=Math.max(BASE_VIEW.x,Math.min(BASE_VIEW.x+BASE_VIEW.w-w,view.x));
+  const y=Math.max(BASE_VIEW.y,Math.min(BASE_VIEW.y+BASE_VIEW.h-h,view.y));
+  state.mapView={x,y,w,h};
+  els.map.setAttribute("viewBox",x+" "+y+" "+w+" "+h);
+  els.zoomResetBtn.textContent=Math.round(BASE_VIEW.w/w*100)+"%";
+}
+function resetMapView(){applyMapView({...BASE_VIEW})}
+function zoomMap(factor,focal=null){
+  const v=state.mapView,px=focal?.x??(v.x+v.w/2),py=focal?.y??(v.y+v.h/2);
+  const nw=v.w*factor,nh=v.h*factor,rx=(px-v.x)/v.w,ry=(py-v.y)/v.h;
+  applyMapView({x:px-rx*nw,y:py-ry*nh,w:nw,h:nh});
+}
+function toggleMapFullscreen(force){
+  const next=typeof force==="boolean"?force:!state.mapFullscreen;
+  state.mapFullscreen=next;
+  els.gameLayout.classList.toggle("map-fullscreen",next);
+  document.body.classList.toggle("map-fullscreen-open",next);
+  els.mapZoomControls.hidden=!next;
+  els.mapFullscreenBtn.textContent=next?"✕ CHIUDI MAPPA":"⛶ MAPPA";
+  resetMapView();
+}
+function setupMapGestures(){
+  els.map.addEventListener("click",ev=>{
+    if(Date.now()<suppressMapClickUntil){ev.preventDefault();ev.stopImmediatePropagation()}
+  },true);
+  els.map.addEventListener("pointerdown",ev=>{
+    if(!state.mapFullscreen||ev.pointerType==="pen")return;
+    activeMapPointers.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+    try{els.map.setPointerCapture(ev.pointerId)}catch(e){}
+    if(activeMapPointers.size===2){
+      const pts=[...activeMapPointers.values()],dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
+      const midX=(pts[0].x+pts[1].x)/2,midY=(pts[0].y+pts[1].y)/2;
+      pinchGesture={distance:Math.hypot(dx,dy),view:{...state.mapView},focal:svgPointFromClient(midX,midY)};
+      panGesture=null;suppressMapClickUntil=Date.now()+500;
+    }else if(activeMapPointers.size===1&&state.mapView.w<BASE_VIEW.w*.999){
+      panGesture={id:ev.pointerId,startX:ev.clientX,startY:ev.clientY,view:{...state.mapView},moved:false};
+    }
+  });
+  els.map.addEventListener("pointermove",ev=>{
+    if(!state.mapFullscreen||ev.pointerType==="pen"||!activeMapPointers.has(ev.pointerId))return;
+    activeMapPointers.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+    if(activeMapPointers.size>=2&&pinchGesture){
+      ev.preventDefault();
+      const pts=[...activeMapPointers.values()].slice(0,2),d=Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
+      if(d>10){
+        const scale=pinchGesture.distance/d,v=pinchGesture.view,f=pinchGesture.focal||{x:v.x+v.w/2,y:v.y+v.h/2};
+        const nw=v.w*scale,nh=v.h*scale,rx=(f.x-v.x)/v.w,ry=(f.y-v.y)/v.h;
+        applyMapView({x:f.x-rx*nw,y:f.y-ry*nh,w:nw,h:nh});
+        suppressMapClickUntil=Date.now()+500;
+      }
+    }else if(panGesture&&panGesture.id===ev.pointerId){
+      const dx=ev.clientX-panGesture.startX,dy=ev.clientY-panGesture.startY;
+      if(Math.hypot(dx,dy)>7)panGesture.moved=true;
+      if(panGesture.moved){
+        ev.preventDefault();
+        const rect=els.map.getBoundingClientRect(),v=panGesture.view;
+        applyMapView({x:v.x-dx*(v.w/rect.width),y:v.y-dy*(v.h/rect.height),w:v.w,h:v.h});
+        suppressMapClickUntil=Date.now()+350;
+      }
+    }
+  },{passive:false});
+  const end=ev=>{
+    activeMapPointers.delete(ev.pointerId);
+    if(activeMapPointers.size<2)pinchGesture=null;
+    if(panGesture?.id===ev.pointerId)panGesture=null;
+  };
+  els.map.addEventListener("pointerup",end);
+  els.map.addEventListener("pointercancel",end);
+}
+function svgPointFromClient(clientX,clientY){
+  const ctm=els.map.getScreenCTM();if(!ctm)return null;
+  const p=els.map.createSVGPoint();p.x=clientX;p.y=clientY;
+  const r=p.matrixTransform(ctm.inverse());return{x:r.x,y:r.y};
+}
+
 function regionPath(i){return $(`.region-shape[data-index="${i}"]`,els.regionsLayer)}
 function resetMapVisuals(){
   $$(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("prompt-highlight","correct-highlight","wrong-highlight","dim"));
@@ -169,7 +258,7 @@ function addStudyMarker(city){
   g.setAttribute("tabindex","0");g.setAttribute("role","button");g.setAttribute("aria-label","Scopri il nome del capoluogo");
   const c=document.createElementNS("http://www.w3.org/2000/svg","circle");c.setAttribute("cx",city.x);c.setAttribute("cy",city.y);c.setAttribute("r",city.type==="region"?12:8);g.appendChild(c);
   const show=ev=>{ev.preventDefault();ev.stopPropagation();showStudyCity(city)};
-  g.addEventListener("pointerdown",show);g.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" ")show(ev)});
+  g.addEventListener("click",show);g.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" ")show(ev)});
   els.markerLayer.appendChild(g);
 }
 function showStudyCity(city){
@@ -293,10 +382,7 @@ function onMapTap(ev){
   showResult(base>=900?"Centratissimo!":base>=650?"Molto vicino!":base>=300?"Ci sei quasi.":"Era più lontano.",
     `${q.item.name} · ${distText} · precisione ${base} pt${state.timerSeconds?` · totale +${gained} pt`:` · +${gained} pt`}`,base>=650?"good":"click");
 }
-function svgPointFromEvent(ev){
-  const ctm=els.map.getScreenCTM();if(!ctm)return null;const p=els.map.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;
-  const r=p.matrixTransform(ctm.inverse());if(r.x<0||r.x>1337||r.y<0||r.y>1600)return null;return{x:r.x,y:r.y};
-}
+function svgPointFromEvent(ev){const r=svgPointFromClient(ev.clientX,ev.clientY);if(!r||r.x<0||r.x>1337||r.y<0||r.y>1600)return null;return r;}
 function precisionScore(km,full=8,zero=250){
   if(km<=full)return 1000;if(km>=zero)return 0;const t=1-(km-full)/(zero-full);return Math.max(0,Math.round(1000*Math.pow(t,1.25)));
 }
@@ -388,7 +474,7 @@ function endTraining(){
   els.finalContent.innerHTML=`<div class="final-cup">🧭</div><h2>Allenamento concluso</h2><p>Hai totalizzato <strong>${state.scores[0]||0} punti</strong>.</p><button type="button" class="primary big" id="playAgainFinal">TORNA ALLA HOME</button>`;
   $("#playAgainFinal").addEventListener("click",goHome);
 }
-function goHome(){clearTimer();els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode");els.mapControls.innerHTML="";resetMapVisuals()}
+function goHome(){clearTimer();toggleMapFullscreen(false);els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode");els.mapControls.innerHTML="";resetMapVisuals()}
 function openInfo(){els.infoDialog.showModal?els.infoDialog.showModal():els.infoDialog.setAttribute("open","")}
 function closeInfo(){els.infoDialog.close?els.infoDialog.close():els.infoDialog.removeAttribute("open")}
 
@@ -398,6 +484,10 @@ els.training.addEventListener("change",()=>{updateTrainingUI();saveSetup()});
 [els.categoryRegion,els.categoryCapitals,els.categoryProvinces,els.categoryPhysical,els.categoryWonders].forEach(el=>el.addEventListener("change",()=>{updateCategoryOptions();saveSetup()}));
 $$(".subcat-physical,.subcat-wonders").forEach(el=>el.addEventListener("change",saveSetup));
 els.direction.addEventListener("change",saveSetup);els.playerNames.addEventListener("input",saveSetup);els.start.addEventListener("click",startGame);els.studyCapitalsBtn.addEventListener("click",startStudyMode);
+els.mapFullscreenBtn.addEventListener("click",()=>toggleMapFullscreen());
+els.zoomInBtn.addEventListener("click",()=>zoomMap(.75));
+els.zoomOutBtn.addEventListener("click",()=>zoomMap(1.333333));
+els.zoomResetBtn.addEventListener("click",resetMapView);
 els.revealBtn.addEventListener("click",revealAnswer);els.correctBtn.addEventListener("click",()=>judge(true));els.wrongBtn.addEventListener("click",()=>judge(false));
 els.nextBtn.addEventListener("click",()=>{tone("next");nextQuestion(false)});els.handoffBtn.addEventListener("click",()=>{els.handoff.hidden=true;tone("next");startTimer()});
 els.endTrainingBtn.addEventListener("click",endTraining);els.homeBtn.addEventListener("click",()=>{if(state.mode==="study"||confirm("Vuoi uscire dalla partita e tornare alla home?"))goHome()});
@@ -405,6 +495,7 @@ els.themeBtn.addEventListener("click",()=>setTheme(state.theme==="dark"?"light":
 els.infoBtn.addEventListener("click",openInfo);els.closeInfo.addEventListener("click",closeInfo);els.restartBtn.addEventListener("click",()=>{closeInfo();goHome()});
 els.infoDialog.addEventListener("click",e=>{if(e.target===els.infoDialog)closeInfo()});
 document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&state.mapFullscreen)toggleMapFullscreen(false)});
 
 if(REGION_PATHS.length!==20)console.warn("Carta: attese 20 regioni, trovate",REGION_PATHS.length);
 setTheme(state.theme);setSound(state.sound);renderPlayerInputs();loadSetup();updateCategoryOptions();buildMap();

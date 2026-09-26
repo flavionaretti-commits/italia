@@ -157,7 +157,7 @@
         <span id="scoreLabel" class="score-pill">0 pt</span>
       </div>
 
-      <div class="game-layout">
+      <div id="gameLayout" class="game-layout">
         <div class="map-card">
           <div class="map-stage">
             <svg id="italyMap" viewBox="0 0 1337 1600" preserveAspectRatio="xMidYMid meet" aria-label="Carta muta interattiva d'Italia">
@@ -165,6 +165,11 @@
               <g id="lineLayer"></g>
               <g id="markerLayer"></g>
             </svg>
+          </div>
+          <div id="mapZoomControls" class="map-zoom-controls" hidden aria-label="Controlli mappa">
+            <button id="zoomInBtn" type="button" aria-label="Ingrandisci mappa">＋</button>
+            <button id="zoomResetBtn" type="button" aria-label="Ripristina zoom">100%</button>
+            <button id="zoomOutBtn" type="button" aria-label="Riduci mappa">−</button>
           </div>
           <div id="wonderImageCard" class="wonder-image-card" hidden aria-live="polite">
             <div class="wonder-image-head">MERAVIGLIA D'ITALIA</div>
@@ -210,6 +215,7 @@
           <div id="scoreboard" class="scoreboard"></div>
           <div class="panel-footer">
             <button id="homeBtn" class="secondary" type="button">⌂ HOME</button>
+            <button id="mapFullscreenBtn" class="secondary" type="button">⛶ MAPPA</button>
             <button id="endTrainingBtn" class="secondary" type="button" hidden>TERMINA</button>
           </div>
         </aside>
@@ -237,13 +243,15 @@
       <p>Le domande continuano finché decidi di terminare. Non c'è classifica tra giocatori.</p>
       <h3>Modalità studio: capoluoghi</h3>
       <p>Mostra contemporaneamente tutti i capoluoghi sulla carta. I <strong>capoluoghi di regione</strong> hanno un punto arancione più grande; gli altri <strong>capoluoghi di provincia</strong> un punto azzurro. Tocca un punto per scoprirne il nome.</p>
+      <h3>Mappa a tutto schermo e zoom</h3>
+      <p>Durante il gioco o lo studio premi <strong>⛶ MAPPA</strong>: la carta occupa tutto lo schermo, particolarmente utile in verticale e con Apple Pencil. I pulsanti <strong>＋ / − / 100%</strong> permettono uno zoom sempre prevedibile; con due dita puoi anche pizzicare la carta e, quando è ingrandita, trascinarla con un dito.</p>
       <h3>Capoluoghi di provincia</h3>
       <p>La modalità usa una <strong>versione scolastica tradizionale</strong>, pensata per l'apprendimento geografico e non per seguire in tempo reale ogni riforma degli enti amministrativi. Per evitare ambiguità nelle domande, una città che è anche capoluogo di regione viene proposta nella categoria <strong>Capoluoghi di regione</strong>, non in quella provinciale.</p>
       <h3>Immagini delle Meraviglie</h3>
       <p>Nelle domande sulle Meraviglie d'Italia compare un piccolo riquadro fotografico sulla carta. Le immagini provengono da Wikipedia/Wikimedia e vengono conservate nella cache del dispositivo dopo il primo caricamento; in assenza di rete resta disponibile un riquadro grafico di riserva.</p>
       <h3>Crediti</h3>
       <p>Idea e progetto didattico: <strong>Flavio Naretti</strong>.<br>Sviluppo: ChatGPT / OpenAI.</p>
-      <p class="muted">Versione 2.1 · I dati, le impostazioni e i punteggi restano sul dispositivo. La carta è stata vettorializzata dalla carta muta fornita per il progetto.</p>
+      <p class="muted">Versione 2.2 · I dati, le impostazioni e i punteggi restano sul dispositivo. La carta è stata vettorializzata dalla carta muta fornita per il progetto.</p>
       <button id="restartBtn" class="secondary" type="button">TORNA ALLA HOME</button>
     </div>
   </dialog>
