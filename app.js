@@ -100,7 +100,7 @@ function buildMap(){
 }
 function regionPath(i){return $(`.region-shape[data-index="${i}"]`,els.regionsLayer)}
 function resetMapVisuals(){
-  $(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("prompt-highlight","correct-highlight","wrong-highlight","dim"));
+  $$(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("prompt-highlight","correct-highlight","wrong-highlight","dim"));
   els.markerLayer.innerHTML="";els.lineLayer.innerHTML="";hideWonderImage();
 }
 function setTheme(theme){
