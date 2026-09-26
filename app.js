@@ -79,10 +79,22 @@ function calibratedCityToMap(lat,lon){
   return{x:base.x+cx/sum,y:base.y+cy/sum};
 }
 
+const CITY_POINT_OFFSETS={
+  "Genova":{dx:0,dy:-12},
+  "Imperia":{dx:0,dy:-10},
+  "Savona":{dx:0,dy:-10},
+  "La Spezia":{dx:0,dy:-8}
+};
+function applyCityOffset(name,p){
+  const o=CITY_POINT_OFFSETS[name];
+  return o?{x:p.x+o.dx,y:p.y+o.dy}:p;
+}
 function itemXY(item){
-  if(Number.isFinite(item.x)&&Number.isFinite(item.y))return{x:item.x,y:item.y};
-  if(item.cat==="provinces")return calibratedCityToMap(item.lat,item.lon);
-  return geoToMap(item.lat,item.lon);
+  let p;
+  if(Number.isFinite(item.x)&&Number.isFinite(item.y))p={x:item.x,y:item.y};
+  else if(item.cat==="provinces")p=calibratedCityToMap(item.lat,item.lon);
+  else p=geoToMap(item.lat,item.lon);
+  return (item.cat==="provinces"||item.cat==="capitals")?applyCityOffset(item.name,p):p;
 }
 const REGION_CAPITAL_NAMES=new Set(REGIONS.map(r=>r.capital));
 const PROVINCE_ONLY=PROVINCES.filter(p=>!REGION_CAPITAL_NAMES.has(p.name));
@@ -296,7 +308,7 @@ function startStudyMode(){
   hideResult();renderStudyCapitals();
 }
 function renderStudyCapitals(){
-  REGIONS.forEach(r=>addStudyMarker({name:r.capital,x:r.x,y:r.y,type:"region"}));
+  REGIONS.forEach(r=>{const p=applyCityOffset(r.capital,{x:r.x,y:r.y});addStudyMarker({name:r.capital,x:p.x,y:p.y,type:"region"})});
   PROVINCE_ONLY.forEach(p=>{const xy=itemXY(p);addStudyMarker({name:p.name,x:xy.x,y:xy.y,type:"province"})});
 }
 function addStudyMarker(city){
@@ -312,7 +324,7 @@ function showStudyCity(city){
 }
 
 function regionItems(){return REGIONS.map((r,i)=>({id:`region-${i}`,name:r.name,kind:"region",cat:"regions",regionIndex:i,region:r}))}
-function capitalItems(){return REGIONS.map((r,i)=>({id:`capital-${i}`,name:r.capital,kind:"point",cat:"capitals",x:r.x,y:r.y,region:r,tolerance:8,maxDistance:250}))}
+function capitalItems(){return REGIONS.map((r,i)=>{const p=applyCityOffset(r.capital,{x:r.x,y:r.y});return{id:`capital-${i}`,name:r.capital,kind:"point",cat:"capitals",x:p.x,y:p.y,region:r,tolerance:8,maxDistance:250}})}
 function getCandidates(cat){
   if(cat==="regions")return regionItems();
   if(cat==="capitals")return capitalItems();

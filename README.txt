@@ -42,3 +42,8 @@ V2.2.2
 - Corretto l'abbinamento delle immagini delle Meraviglie d'Italia.
 - Eliminata la ricerca generica su Wikipedia: ciascuna delle 54 meraviglie è ora associata a una pagina Wikipedia precisa.
 - Se una pagina non fornisce una miniatura valida, l'app mostra il riquadro grafico di riserva invece di una fotografia potenzialmente sbagliata.
+
+V2.2.3
+- Micro-correzione manuale dei quattro capoluoghi liguri sulla carta, senza alterare la calibrazione generale:
+  Genova -12 px in verticale, Imperia -10 px, Savona -10 px, La Spezia -8 px.
+- La correzione vale sia nel gioco sia nella modalità Studio.
