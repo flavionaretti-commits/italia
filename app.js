@@ -327,9 +327,11 @@ function startStudyMode(){
     </div>
     <div class="study-edit-actions">
       <button id="repositionBtn" type="button" class="secondary">✥ RIPOSIZIONA</button>
+      <button id="exportPositionsBtn" type="button" class="secondary">⬆ ESPORTA POSIZIONI</button>
       <button id="resetPositionsBtn" type="button" class="secondary">↶ RIPRISTINA</button>
     </div>`;
   $("#repositionBtn").addEventListener("click",toggleRepositionMode);
+  $("#exportPositionsBtn").addEventListener("click",exportSavedCityPositions);
   $("#resetPositionsBtn").addEventListener("click",resetSavedCityPositions);
   hideResult();renderStudyCapitals();
 }
@@ -352,6 +354,62 @@ function toggleRepositionMode(){
     els.nextBtn.hidden=true;
   }else hideResult();
 }
+async function exportSavedCityPositions(){
+  const names=Object.keys(USER_CITY_OFFSETS);
+  if(!names.length){
+    els.resultBox.hidden=false;els.resultTitle.textContent="Nessuna correzione da esportare";
+    els.resultText.textContent="Prima riposiziona almeno un capoluogo.";els.nextBtn.hidden=true;return;
+  }
+
+  const cities=names.sort((a,b)=>a.localeCompare(b,"it")).map(name=>{
+    const regional=REGIONS.find(r=>r.capital===name);
+    const provincial=PROVINCES.find(p=>p.name===name);
+    let base;
+    if(regional)base={x:regional.x,y:regional.y};
+    else if(provincial)base=calibratedCityToMap(provincial.lat,provincial.lon);
+    else base={x:0,y:0};
+    const built=CITY_POINT_OFFSETS[name]||{dx:0,dy:0};
+    const user=USER_CITY_OFFSETS[name]||{dx:0,dy:0};
+    return{
+      name,
+      dx:+user.dx.toFixed(2),
+      dy:+user.dy.toFixed(2),
+      x:+(base.x+built.dx+user.dx).toFixed(2),
+      y:+(base.y+built.dy+user.dy).toFixed(2)
+    };
+  });
+
+  const payload={
+    app:"ITALIA!",
+    type:"city-position-calibration",
+    version:"2.2.6",
+    exportedAt:new Date().toISOString(),
+    cities
+  };
+  const text=JSON.stringify(payload,null,2);
+  const file=new File([text],"italia-coordinate-capoluoghi.json",{type:"application/json"});
+
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+      await navigator.share({files:[file],title:"ITALIA! – coordinate capoluoghi",text:"Coordinate corrette dei capoluoghi"});
+      els.resultBox.hidden=false;els.resultTitle.textContent="Coordinate pronte";
+      els.resultText.textContent="Condividi o salva il file e poi allegalo nella chat: potrò trasferire le correzioni nella versione GitHub.";
+      els.nextBtn.hidden=true;return;
+    }
+  }catch(e){
+    if(e?.name==="AbortError")return;
+  }
+
+  const blob=new Blob([text],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="italia-coordinate-capoluoghi.json";
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  els.resultBox.hidden=false;els.resultTitle.textContent="Coordinate esportate";
+  els.resultText.textContent="Allega qui il file italia-coordinate-capoluoghi.json: potrò inserirle nella versione GitHub.";
+  els.nextBtn.hidden=true;
+}
+
 function resetSavedCityPositions(){
   if(!Object.keys(USER_CITY_OFFSETS).length){
     els.resultBox.hidden=false;els.resultTitle.textContent="Nessuna correzione salvata";

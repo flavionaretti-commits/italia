@@ -340,3 +340,7 @@ body.map-fullscreen-open{overflow:hidden;overscroll-behavior:none}
   filter:drop-shadow(0 4px 8px rgba(0,0,0,.42))
 }
 @media(max-width:520px){.study-edit-actions{grid-template-columns:1fr}}
+
+/* ITALIA! v2.2.6 – esportazione calibrazione capoluoghi */
+.study-edit-actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:720px){.study-edit-actions{grid-template-columns:1fr}}

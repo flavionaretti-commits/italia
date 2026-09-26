@@ -59,3 +59,9 @@ V2.2.5
 - Con RIPOSIZIONA attivo i puntini possono essere trascinati con dito o Apple Pencil.
 - Le correzioni vengono salvate in localStorage sul dispositivo e vengono riutilizzate anche nelle domande del gioco.
 - Il pulsante RIPRISTINA cancella tutte le correzioni personali e torna alle coordinate predefinite dell'app.
+
+V2.2.6
+- Aggiunto ESPORTA POSIZIONI nella modalità Studio.
+- Esporta le sole correzioni manuali dei capoluoghi in italia-coordinate-capoluoghi.json, includendo sia gli spostamenti dx/dy sia le coordinate finali x/y.
+- Su iPad/iPhone usa il foglio Condividi quando disponibile; altrimenti scarica il JSON.
+- Il file può essere inviato in chat per trasferire le correzioni nella versione GitHub dell'app.
