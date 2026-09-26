@@ -33,3 +33,7 @@ V2.2
 - Zoom affidabile con pulsanti + / − / reset, fino a 6×.
 - Pinch a due dita gestito direttamente dalla mappa; trascinamento con un dito quando la carta è ingrandita.
 - Apple Pencil lasciata libera per il tap preciso: la penna non attiva il trascinamento della carta.
+
+V2.2.1
+- Migliorata la posizione dei capoluoghi di provincia sulla carta: la proiezione geografica viene ora corretta localmente usando i 20 capoluoghi regionali già calibrati come punti di riferimento.
+- La modifica riguarda solo le coordinate dei capoluoghi provinciali e non cambia regioni, punteggi, modalità Studio, Italia fisica o Meraviglie.

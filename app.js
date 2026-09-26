@@ -37,7 +37,53 @@ function geoToMap(lat,lon){
   const y=MAP.yMin+(MAP.latMax-lat)/(MAP.latMax-MAP.latMin)*(MAP.yMax-MAP.yMin);
   return{x,y};
 }
-function itemXY(item){return Number.isFinite(item.x)&&Number.isFinite(item.y)?{x:item.x,y:item.y}:geoToMap(item.lat,item.lon)}
+
+/*
+ * La carta del progetto è una carta didattica vettorializzata, non una proiezione
+ * geografica perfettamente lineare. Per i capoluoghi di provincia correggiamo
+ * quindi la proiezione usando i 20 capoluoghi regionali già calibrati a mano.
+ * La correzione è locale (media pesata dei 4 ancoraggi più vicini) e lascia
+ * invariata tutta la logica del gioco.
+ */
+const REGION_GEO_ANCHORS=[
+  ["Aosta",45.737,7.321],["Torino",45.070,7.687],["Genova",44.405,8.946],["Milano",45.464,9.190],
+  ["Trento",46.074,11.121],["Venezia",45.440,12.315],["Trieste",45.650,13.770],["Bologna",44.494,11.342],
+  ["Firenze",43.769,11.255],["Ancona",43.616,13.518],["Perugia",43.110,12.390],["Roma",41.903,12.496],
+  ["L'Aquila",42.350,13.399],["Campobasso",41.560,14.668],["Napoli",40.852,14.268],["Bari",41.117,16.871],
+  ["Potenza",40.640,15.805],["Catanzaro",38.910,16.588],["Cagliari",39.224,9.122],["Palermo",38.116,13.361]
+].map(([name,lat,lon])=>{
+  const region=REGIONS.find(r=>r.capital===name);
+  const base=geoToMap(lat,lon);
+  return{name,lat,lon,dx:region.x-base.x,dy:region.y-base.y};
+});
+
+function calibratedCityToMap(lat,lon){
+  const base=geoToMap(lat,lon);
+  const cos=Math.cos(lat*Math.PI/180);
+  const nearest=REGION_GEO_ANCHORS.map(a=>{
+    const dx=(lon-a.lon)*cos,dy=lat-a.lat;
+    return{a,d2:dx*dx+dy*dy};
+  }).sort((u,v)=>u.d2-v.d2).slice(0,4);
+
+  // Se coincide con un ancoraggio regionale, usa esattamente il punto calibrato.
+  if(nearest[0]&&nearest[0].d2<1e-10){
+    const a=nearest[0].a;
+    return{x:base.x+a.dx,y:base.y+a.dy};
+  }
+
+  let sum=0,cx=0,cy=0;
+  for(const n of nearest){
+    const w=1/Math.pow(Math.max(n.d2,0.0025),1.15);
+    sum+=w;cx+=n.a.dx*w;cy+=n.a.dy*w;
+  }
+  return{x:base.x+cx/sum,y:base.y+cy/sum};
+}
+
+function itemXY(item){
+  if(Number.isFinite(item.x)&&Number.isFinite(item.y))return{x:item.x,y:item.y};
+  if(item.cat==="provinces")return calibratedCityToMap(item.lat,item.lon);
+  return geoToMap(item.lat,item.lon);
+}
 const REGION_CAPITAL_NAMES=new Set(REGIONS.map(r=>r.capital));
 const PROVINCE_ONLY=PROVINCES.filter(p=>!REGION_CAPITAL_NAMES.has(p.name));
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
