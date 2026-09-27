@@ -312,14 +312,23 @@ function setupMapGestures(){
   els.map.addEventListener("pointerdown",ev=>{
     if(!state.mapFullscreen||ev.pointerType==="pen")return;
     activeMapPointers.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
-    try{els.map.setPointerCapture(ev.pointerId)}catch(e){}
+
+    /*
+     * Su desktop NON catturiamo subito il mouse: la pointer capture sull'SVG
+     * trasformava il click sulla regione in un click sulla mappa intera.
+     * Touch resta invariato, così pinch/drag su iPad e smartphone non cambiano.
+     */
+    if(ev.pointerType!=="mouse"){
+      try{els.map.setPointerCapture(ev.pointerId)}catch(e){}
+    }
+
     if(activeMapPointers.size===2){
       const pts=[...activeMapPointers.values()],dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
       const midX=(pts[0].x+pts[1].x)/2,midY=(pts[0].y+pts[1].y)/2;
       pinchGesture={distance:Math.hypot(dx,dy),view:{...state.mapView},focal:svgPointFromClient(midX,midY)};
       panGesture=null;suppressMapClickUntil=Date.now()+500;
     }else if(activeMapPointers.size===1&&state.mapView.w<BASE_VIEW.w*.999){
-      panGesture={id:ev.pointerId,startX:ev.clientX,startY:ev.clientY,view:{...state.mapView},moved:false};
+      panGesture={id:ev.pointerId,startX:ev.clientX,startY:ev.clientY,view:{...state.mapView},moved:false,captured:false};
     }
   });
   els.map.addEventListener("pointermove",ev=>{
@@ -339,6 +348,9 @@ function setupMapGestures(){
       if(Math.hypot(dx,dy)>7)panGesture.moved=true;
       if(panGesture.moved){
         ev.preventDefault();
+        if(ev.pointerType==="mouse"&&!panGesture.captured){
+          try{els.map.setPointerCapture(ev.pointerId);panGesture.captured=true}catch(e){}
+        }
         const rect=els.map.getBoundingClientRect(),v=panGesture.view;
         applyMapView({x:v.x-dx*(v.w/rect.width),y:v.y-dy*(v.h/rect.height),w:v.w,h:v.h});
         suppressMapClickUntil=Date.now()+350;

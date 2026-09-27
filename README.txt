@@ -92,3 +92,9 @@ V2.2.11
 - resetMapVisuals e Studio regioni chiamavano forEach su querySelector (un solo elemento) invece che su una lista di regioni.
 - Eseguiti smoke test delle tre entrate principali: gioco, Studia i capoluoghi, Studia le regioni.
 - Asset versionati a 2211 per forzare il caricamento del JavaScript corretto.
+
+V2.2.12
+- Corretto un problema specifico desktop nella mappa a tutto schermo della modalità STUDIA LE REGIONI.
+- Il mouse non usa più la pointer capture al semplice click, quindi il click resta associato alla singola regione.
+- Su desktop la pointer capture viene attivata solo quando il mouse viene effettivamente trascinato per spostare una mappa già zoomata.
+- Il comportamento touch/Apple Pencil di iPad e smartphone resta invariato.
