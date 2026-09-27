@@ -559,6 +559,9 @@ function addStudyMarker(city){
   g.setAttribute("tabindex","0");g.setAttribute("role","button");
   g.setAttribute("aria-label",state.repositioning?"Trascina "+city.name:"Scopri il nome del capoluogo");
   g.dataset.city=city.name;
+  const halo=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  halo.setAttribute("class","study-selection-halo");
+  halo.setAttribute("cx",city.x);halo.setAttribute("cy",city.y);halo.setAttribute("r",city.type==="region"?18:14);g.appendChild(halo);
   const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
   c.setAttribute("cx",city.x);c.setAttribute("cy",city.y);c.setAttribute("r",city.type==="region"?12:8);g.appendChild(c);
 
@@ -578,6 +581,7 @@ function addStudyMarker(city){
     const dx=p.x-drag.startPointer.x,dy=p.y-drag.startPointer.y;
     if(Math.hypot(dx,dy)>1.5)drag.moved=true;
     c.setAttribute("cx",drag.startCity.x+dx);c.setAttribute("cy",drag.startCity.y+dy);
+    halo.setAttribute("cx",drag.startCity.x+dx);halo.setAttribute("cy",drag.startCity.y+dy);
   });
   const finishDrag=ev=>{
     if(!drag||drag.pointerId!==ev.pointerId)return;
@@ -597,13 +601,15 @@ function addStudyMarker(city){
 
   const show=ev=>{
     if(state.repositioning)return;
-    ev.preventDefault();ev.stopPropagation();showStudyCity(city);
+    ev.preventDefault();ev.stopPropagation();showStudyCity(city,g);
   };
   g.addEventListener("click",show);
   g.addEventListener("keydown",ev=>{if(!state.repositioning&&(ev.key==="Enter"||ev.key===" "))show(ev)});
   els.markerLayer.appendChild(g);
 }
-function showStudyCity(city){
+function showStudyCity(city,marker=null){
+  els.markerLayer.querySelectorAll(".study-marker").forEach(m=>m.classList.remove("selected"));
+  if(marker)marker.classList.add("selected");
   els.resultBox.hidden=false;els.resultTitle.textContent=city.name;
   els.resultText.textContent=city.type==="region"?"Capoluogo di regione":"Capoluogo di provincia";
   els.nextBtn.hidden=true;tone("click");

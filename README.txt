@@ -98,3 +98,9 @@ V2.2.12
 - Il mouse non usa più la pointer capture al semplice click, quindi il click resta associato alla singola regione.
 - Su desktop la pointer capture viene attivata solo quando il mouse viene effettivamente trascinato per spostare una mappa già zoomata.
 - Il comportamento touch/Apple Pencil di iPad e smartphone resta invariato.
+
+V2.2.13
+- Uniformata la selezione dei capoluoghi tra PC e iPad.
+- Eliminato il quadratino di focus nativo che compariva con il mouse sul desktop.
+- Il capoluogo selezionato mostra ora un sottile anello dorato esterno, senza coprire il puntino blu/arancione.
+- L'anello compare anche con Apple Pencil e scompare automaticamente quando si seleziona un altro capoluogo.
