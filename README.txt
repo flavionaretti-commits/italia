@@ -119,3 +119,9 @@ V2.2.15
 - Aggiunti RIPOSIZIONA, ESPORTA POSIZIONI e RIPRISTINA anche per i luoghi famosi.
 - Le correzioni dei luoghi famosi sono salvate separatamente in localStorage e vengono applicate immediatamente anche alle domande del gioco.
 - ESPORTA POSIZIONI produce italia-coordinate-luoghi-famosi.json, pronto per incorporare successivamente le coordinate definitive nella repository.
+
+V2.2.16
+- Incorporate nella versione ufficiale 37 correzioni manuali dei Luoghi famosi esportate dalla modalità Studio.
+- Le coordinate corrette vengono ora usate sia nello Studio sia nelle domande del gioco.
+- La calibrazione locale dei Luoghi famosi passa a 2.2.16: i vecchi delta salvati sul dispositivo vengono azzerati una sola volta per evitare doppie correzioni.
+- RIPOSIZIONA ed ESPORTA POSIZIONI restano disponibili per eventuali rifiniture successive.

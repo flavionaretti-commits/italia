@@ -207,8 +207,46 @@ function applyCityOffset(name,p){
   const user=USER_CITY_OFFSETS[name]||{dx:0,dy:0};
   return{x:p.x+built.dx+user.dx,y:p.y+built.dy+user.dy};
 }
-const WONDER_POINT_OFFSETS={};
-const WONDER_CALIBRATION_VERSION="2.2.15";
+const WONDER_POINT_OFFSETS={
+  "wonder-amalfi":{dx:-6.77,dy:8.13},
+  "wonder-arena-verona":{dx:-10.66,dy:2.33},
+  "wonder-san-nicola":{dx:-5.18,dy:4.78},
+  "wonder-san-vitale":{dx:-26.74,dy:2.25},
+  "wonder-santa-croce":{dx:11.16,dy:0.4},
+  "wonder-burano":{dx:-5.8,dy:-18.38},
+  "wonder-cala-goloritze":{dx:-51.92,dy:7.91},
+  "wonder-marmore":{dx:-6,dy:-3.6},
+  "wonder-cinque-terre":{dx:-28.53,dy:-8.52},
+  "wonder-costa-smeralda":{dx:-41.04,dy:16.32},
+  "wonder-duomo-firenze":{dx:-5,dy:3.66},
+  "wonder-duomo-milano":{dx:-15.99,dy:2.33},
+  "wonder-ercolano":{dx:-15.09,dy:9.52},
+  "wonder-erice":{dx:-19.86,dy:44.88},
+  "wonder-etna":{dx:10.01,dy:14.09},
+  "wonder-braies":{dx:6.6,dy:-1.2},
+  "wonder-mole":{dx:-17.66,dy:-1.67},
+  "wonder-cerveteri":{dx:-8.77,dy:7.18},
+  "wonder-orvieto":{dx:0.19,dy:-5.03},
+  "wonder-ostia-antica":{dx:-7.58,dy:9.57},
+  "wonder-neapolis":{dx:5.96,dy:37.04},
+  "wonder-campo-siena":{dx:-1.67,dy:0.33},
+  "wonder-san-marco":{dx:-27.32,dy:-11.66},
+  "wonder-pompei":{dx:-10.42,dy:13.29},
+  "wonder-ponte-vecchio":{dx:-7,dy:3.66},
+  "wonder-portofino":{dx:-24.27,dy:-11.07},
+  "wonder-positano":{dx:-4.26,dy:13.16},
+  "wonder-reggia-caserta":{dx:-1.59,dy:8.77},
+  "wonder-scala-turchi":{dx:-14.83,dy:26.7},
+  "wonder-selinunte":{dx:-9.37,dy:24.27},
+  "wonder-stromboli":{dx:11.87,dy:28.93},
+  "wonder-taormina":{dx:12.64,dy:8},
+  "wonder-teatro-taormina":{dx:9.79,dy:8.09},
+  "wonder-torre-pisa":{dx:-8.25,dy:0},
+  "wonder-valle-templi":{dx:12.35,dy:18.73},
+  "wonder-venezia":{dx:-9.48,dy:-19.15},
+  "wonder-vesuvio":{dx:-5.16,dy:5.71}
+};
+const WONDER_CALIBRATION_VERSION="2.2.16";
 let USER_WONDER_OFFSETS={};
 try{
   const localVersion=localStorage.getItem("italia-wonder-offsets-version");
@@ -616,7 +654,7 @@ async function exportSavedWonderPositions(){
       };
     });
   const payload={
-    app:"ITALIA!",type:"wonder-position-calibration",version:"2.2.15",
+    app:"ITALIA!",type:"wonder-position-calibration",version:"2.2.16",
     exportedAt:new Date().toISOString(),wonders
   };
   const text=JSON.stringify(payload,null,2);
