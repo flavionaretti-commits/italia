@@ -80,24 +80,123 @@ function calibratedCityToMap(lat,lon){
 }
 
 const CITY_POINT_OFFSETS={
-  "Genova":{dx:0,dy:-20},
-  "Imperia":{dx:0,dy:-18},
-  "Savona":{dx:0,dy:-10},
-  "La Spezia":{dx:0,dy:-16},
-  "Massa":{dx:10,dy:0},
-  "Livorno":{dx:12,dy:0},
-  "Venezia":{dx:-10,dy:0},
-  "Messina":{dx:0,dy:10},
-  "Reggio Calabria":{dx:0,dy:-10}
+  "Agrigento":{dx:9.17,dy:-29.02},
+  "Alessandria":{dx:-5.49,dy:-3.72},
+  "Ancona":{dx:-16.9,dy:-21.23},
+  "Andria":{dx:-1.48,dy:6.67},
+  "Arezzo":{dx:2.62,dy:-7.85},
+  "Ascoli Piceno":{dx:-21.37,dy:-12.91},
+  "Asti":{dx:5.1,dy:-5.97},
+  "Avellino":{dx:0.74,dy:0.77},
+  "Bari":{dx:50.02,dy:26.76},
+  "Barletta":{dx:16.33,dy:4.88},
+  "Belluno":{dx:0,dy:6.72},
+  "Benevento":{dx:7.74,dy:2.39},
+  "Bergamo":{dx:-4.56,dy:7.79},
+  "Biella":{dx:-7.92,dy:-3.71},
+  "Bologna":{dx:30.72,dy:-4.26},
+  "Bolzano":{dx:-10.06,dy:-2.08},
+  "Brescia":{dx:-0.82,dy:5.71},
+  "Brindisi":{dx:48.98,dy:26.45},
+  "Cagliari":{dx:3.26,dy:-13.86},
+  "Caltanissetta":{dx:0.45,dy:-9.37},
+  "Campobasso":{dx:28.58,dy:14.67},
+  "Carbonia":{dx:7.09,dy:-11.14},
+  "Catania":{dx:7.47,dy:-0.75},
+  "Catanzaro":{dx:7.19,dy:25.18},
+  "Chieti":{dx:9.15,dy:25.95},
+  "Como":{dx:-27,dy:-13.6},
+  "Cosenza":{dx:-16.82,dy:1.23},
+  "Cremona":{dx:0.44,dy:-3.55},
+  "Crotone":{dx:-4.63,dy:5.65},
+  "Cuneo":{dx:11.33,dy:-6.43},
+  "Enna":{dx:-18.69,dy:-68.26},
+  "Fermo":{dx:-10.9,dy:-15.35},
+  "Ferrara":{dx:12.52,dy:6.72},
+  "Firenze":{dx:13.66,dy:6.83},
+  "Foggia":{dx:20,dy:-8.65},
+  "Forlì":{dx:-0.79,dy:-0.4},
+  "Frosinone":{dx:-19.09,dy:-4.96},
+  "Genova":{dx:1.55,dy:-30.06},
+  "Gorizia":{dx:13.66,dy:8.82},
+  "Imperia":{dx:2.01,dy:-27.24},
+  "Isernia":{dx:13.78,dy:15.02},
+  "L'Aquila":{dx:-6.75,dy:11.8},
+  "La Spezia":{dx:-13.45,dy:-32.92},
+  "Latina":{dx:-17.68,dy:-15.9},
+  "Lecce":{dx:42.42,dy:20.93},
+  "Lecco":{dx:-16.5,dy:-3.83},
+  "Livorno":{dx:13.63,dy:-8.97},
+  "Lodi":{dx:-20.08,dy:-16.45},
+  "Lucca":{dx:14.2,dy:-32.59},
+  "Macerata":{dx:-5.39,dy:-19.27},
+  "Mantova":{dx:-13.31,dy:4.88},
+  "Massa":{dx:-2.23,dy:-30.98},
+  "Matera":{dx:11.19,dy:16.54},
+  "Messina":{dx:-11.76,dy:27.62},
+  "Milano":{dx:-35.3,dy:-13.55},
+  "Modena":{dx:16.65,dy:0.33},
+  "Monza":{dx:-22.26,dy:-12.5},
+  "Novara":{dx:-32.11,dy:-11.26},
+  "Nuoro":{dx:-2.45,dy:-17.94},
+  "Oristano":{dx:12.23,dy:-8.97},
+  "Padova":{dx:-17.37,dy:0.48},
+  "Palermo":{dx:10.88,dy:-13.67},
+  "Parma":{dx:-15.58,dy:-11.87},
+  "Pavia":{dx:-44.03,dy:5.51},
+  "Perugia":{dx:-7.35,dy:-14.74},
+  "Pesaro":{dx:-9.9,dy:-8.14},
+  "Pescara":{dx:-5.35,dy:17.62},
+  "Piacenza":{dx:-16.79,dy:-0.19},
+  "Pisa":{dx:11.71,dy:-21.06},
+  "Pistoia":{dx:2.62,dy:-8.68},
+  "Pordenone":{dx:4.89,dy:-15.75},
+  "Prato":{dx:4.48,dy:-0.81},
+  "Ragusa":{dx:2.38,dy:-9.94},
+  "Ravenna":{dx:-6.76,dy:0.53},
+  "Reggio Calabria":{dx:15.76,dy:25.44},
+  "Reggio Emilia":{dx:-1.45,dy:-4.71},
+  "Rieti":{dx:-14.46,dy:-1.35},
+  "Rimini":{dx:-11.45,dy:-16.45},
+  "Roma":{dx:-7.8,dy:-25.21},
+  "Rovigo":{dx:-24.26,dy:-12.09},
+  "Savona":{dx:5.81,dy:-29.18},
+  "Siracusa":{dx:-4.85,dy:-9.71},
+  "Sondrio":{dx:-25.37,dy:2.52},
+  "Taranto":{dx:30.92,dy:-6.07},
+  "Teramo":{dx:-9.51,dy:9.85},
+  "Terni":{dx:-18.32,dy:-35.14},
+  "Torino":{dx:12.93,dy:0.3},
+  "Trani":{dx:14.34,dy:23.27},
+  "Trapani":{dx:11.01,dy:-4.86},
+  "Trento":{dx:-18.33,dy:26.97},
+  "Treviso":{dx:-46.83,dy:-21.12},
+  "Trieste":{dx:12.3,dy:7.8},
+  "Udine":{dx:4.59,dy:-17.97},
+  "Varese":{dx:-32.61,dy:-3.89},
+  "Venezia":{dx:-10.99,dy:-39.35},
+  "Verbania":{dx:-25.66,dy:-25.61},
+  "Vercelli":{dx:-20.99,dy:0.27},
+  "Vibo Valentia":{dx:-4.23,dy:48.25},
+  "Vicenza":{dx:4.22,dy:-40.62},
+  "Viterbo":{dx:-27.9,dy:-5.01}
 };
+const CITY_CALIBRATION_VERSION="2.2.7";
 let USER_CITY_OFFSETS={};
 try{
-  const saved=JSON.parse(localStorage.getItem("italia-city-offsets")||"{}");
-  if(saved&&typeof saved==="object")USER_CITY_OFFSETS=saved;
+  const localVersion=localStorage.getItem("italia-city-offsets-version");
+  if(localVersion===CITY_CALIBRATION_VERSION){
+    const saved=JSON.parse(localStorage.getItem("italia-city-offsets")||"{}");
+    if(saved&&typeof saved==="object")USER_CITY_OFFSETS=saved;
+  }else{
+    localStorage.removeItem("italia-city-offsets");
+    localStorage.setItem("italia-city-offsets-version",CITY_CALIBRATION_VERSION);
+  }
 }catch(e){}
 
 function saveUserCityOffsets(){
   localStorage.setItem("italia-city-offsets",JSON.stringify(USER_CITY_OFFSETS));
+  localStorage.setItem("italia-city-offsets-version",CITY_CALIBRATION_VERSION);
 }
 function applyCityOffset(name,p){
   const built=CITY_POINT_OFFSETS[name]||{dx:0,dy:0};
@@ -382,7 +481,7 @@ async function exportSavedCityPositions(){
   const payload={
     app:"ITALIA!",
     type:"city-position-calibration",
-    version:"2.2.6",
+    version:"2.2.7",
     exportedAt:new Date().toISOString(),
     cities
   };

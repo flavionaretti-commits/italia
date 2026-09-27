@@ -65,3 +65,8 @@ V2.2.6
 - Esporta le sole correzioni manuali dei capoluoghi in italia-coordinate-capoluoghi.json, includendo sia gli spostamenti dx/dy sia le coordinate finali x/y.
 - Su iPad/iPhone usa il foglio Condividi quando disponibile; altrimenti scarica il JSON.
 - Il file può essere inviato in chat per trasferire le correzioni nella versione GitHub dell'app.
+
+V2.2.7
+- Incorporate nella versione ufficiale le 100 correzioni dei capoluoghi esportate dalla calibrazione manuale su iPad del 27/09/2026.
+- Le correzioni precedentemente salvate in locale vengono azzerate una sola volta al passaggio a questa versione, per evitare che gli spostamenti vengano applicati due volte.
+- RIPOSIZIONA ed ESPORTA POSIZIONI restano disponibili per eventuali rifiniture successive.
