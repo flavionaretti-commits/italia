@@ -70,3 +70,8 @@ V2.2.7
 - Incorporate nella versione ufficiale le 100 correzioni dei capoluoghi esportate dalla calibrazione manuale su iPad del 27/09/2026.
 - Le correzioni precedentemente salvate in locale vengono azzerate una sola volta al passaggio a questa versione, per evitare che gli spostamenti vengano applicati due volte.
 - RIPOSIZIONA ed ESPORTA POSIZIONI restano disponibili per eventuali rifiniture successive.
+
+V2.2.8
+- Rimossi i bordi chiari/scuri attorno ai puntini blu e arancioni dei capoluoghi nella modalità Studio, sia in tema giorno sia in tema notte.
+- Anche hover/focus non aggiungono più un bordo spesso; resta solo un leggero rilievo per mantenere leggibile il punto.
+- In modalità RIPOSIZIONA il bordo di evidenziazione resta attivo, perché serve a distinguere i punti trascinabili.
