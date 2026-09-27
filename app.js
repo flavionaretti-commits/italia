@@ -921,7 +921,7 @@ els.questions.addEventListener("change",saveSetup);els.timer.addEventListener("c
 els.training.addEventListener("change",()=>{updateTrainingUI();saveSetup()});
 [els.categoryRegion,els.categoryCapitals,els.categoryProvinces,els.categoryPhysical,els.categoryWonders].forEach(el=>el.addEventListener("change",()=>{updateCategoryOptions();saveSetup()}));
 $$(".subcat-physical,.subcat-wonders").forEach(el=>el.addEventListener("change",saveSetup));
-els.direction.addEventListener("change",saveSetup);els.playerNames.addEventListener("input",saveSetup);els.start.addEventListener("click",startGame);els.studyRegionsBtn.addEventListener("click",startStudyRegions);els.studyCapitalsBtn.addEventListener("click",startStudyMode);
+els.direction.addEventListener("change",saveSetup);els.playerNames.addEventListener("input",saveSetup);els.start.addEventListener("click",startGame);els.studyRegionsBtn?.addEventListener("click",startStudyRegions);els.studyCapitalsBtn.addEventListener("click",startStudyMode);
 els.mapFullscreenBtn.addEventListener("click",()=>toggleMapFullscreen());
 els.zoomInBtn.addEventListener("click",()=>zoomMap(.75));
 els.zoomOutBtn.addEventListener("click",()=>zoomMap(1.333333));

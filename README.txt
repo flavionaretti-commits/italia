@@ -80,3 +80,9 @@ V2.2.9
 - Aggiunta la modalità STUDIA LE REGIONI: toccando una regione questa si evidenzia e mostra il proprio nome; selezionandone un'altra la precedente torna normale.
 - Nella modalità STUDIA I CAPOLUOGHI le sagome regionali non sono più interattive, evitando il rettangolo di focus quando si tocca uno spazio vuoto.
 - Le due modalità di studio sono ora separate per rendere più chiaro l'obiettivo didattico.
+
+V2.2.10
+- Corretto il blocco totale causato da possibili versioni miste di index.html e app.js durante l'aggiornamento della PWA.
+- Gli asset principali ora hanno un identificatore di versione nell'URL, così una nuova pagina non può caricare per errore JavaScript vecchio dalla cache.
+- Il service worker usa rete-prima per navigazione e file core quando online, con fallback alla cache offline.
+- Il nuovo pulsante STUDIA LE REGIONI è registrato in modo tollerante: anche se un vecchio HTML fosse ancora visibile per un istante, non può più interrompere l'avvio di tutta l'app.
