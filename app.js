@@ -361,7 +361,7 @@ function svgPointFromClient(clientX,clientY){
 
 function regionPath(i){return $(`.region-shape[data-index="${i}"]`,els.regionsLayer)}
 function resetMapVisuals(){
-  $(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("prompt-highlight","correct-highlight","wrong-highlight","dim","study-region-selected"));
+  els.regionsLayer.querySelectorAll(".region-shape").forEach(p=>p.classList.remove("prompt-highlight","correct-highlight","wrong-highlight","dim","study-region-selected"));
   els.markerLayer.innerHTML="";els.lineLayer.innerHTML="";hideWonderImage();
 }
 function setTheme(theme){
@@ -449,7 +449,7 @@ function startStudyRegions(){
   hideResult();
 }
 function showStudyRegion(idx){
-  $(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("study-region-selected"));
+  els.regionsLayer.querySelectorAll(".region-shape").forEach(p=>p.classList.remove("study-region-selected"));
   const p=regionPath(idx);if(!p)return;
   p.classList.add("study-region-selected");
   els.resultBox.hidden=false;els.resultTitle.textContent=REGIONS[idx].name;

@@ -86,3 +86,9 @@ V2.2.10
 - Gli asset principali ora hanno un identificatore di versione nell'URL, così una nuova pagina non può caricare per errore JavaScript vecchio dalla cache.
 - Il service worker usa rete-prima per navigazione e file core quando online, con fallback alla cache offline.
 - Il nuovo pulsante STUDIA LE REGIONI è registrato in modo tollerante: anche se un vecchio HTML fosse ancora visibile per un istante, non può più interrompere l'avvio di tutta l'app.
+
+V2.2.11
+- Corretto il vero errore runtime che bloccava ogni modalità sulla schermata segnaposto "Trova il Piemonte".
+- resetMapVisuals e Studio regioni chiamavano forEach su querySelector (un solo elemento) invece che su una lista di regioni.
+- Eseguiti smoke test delle tre entrate principali: gioco, Studia i capoluoghi, Studia le regioni.
+- Asset versionati a 2211 per forzare il caricamento del JavaScript corretto.
