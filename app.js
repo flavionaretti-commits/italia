@@ -8,7 +8,7 @@ const state={
   wonderSubs:["monuments","places","archaeology","nature"],direction:"mixed",timerSeconds:0,
   current:null,scores:[],timerId:null,timeLeft:0,timerStartedAt:0,timerStoppedRatio:1,locked:false,
   questionPools:{},sound:localStorage.getItem("italia-sound")!=="off",theme:localStorage.getItem("italia-theme")||"light",
-  mapFullscreen:false,mapView:{x:0,y:0,w:1337,h:1600},wonderImageToken:0,repositioning:false
+  mapFullscreen:false,mapView:{x:0,y:0,w:1337,h:1600},wonderImageToken:0,repositioning:false,studyWonderSubs:["monuments","places","archaeology","nature"]
 };
 
 const els={
@@ -25,7 +25,7 @@ const els={
   progressLabel:$("#progressLabel"),scoreLabel:$("#scoreLabel"),scoreboard:$("#scoreboard"),handoff:$("#handoff"),
   handoffName:$("#handoffName"),handoffBtn:$("#handoffBtn"),finalOverlay:$("#finalOverlay"),finalContent:$("#finalContent"),
   homeBtn:$("#homeBtn"),themeBtn:$("#themeBtn"),soundBtn:$("#soundBtn"),infoBtn:$("#infoBtn"),infoDialog:$("#infoDialog"),
-  closeInfo:$("#closeInfo"),restartBtn:$("#restartBtn"),studyRegionsBtn:$("#studyRegionsBtn"),studyCapitalsBtn:$("#studyCapitalsBtn"),
+  closeInfo:$("#closeInfo"),restartBtn:$("#restartBtn"),studyRegionsBtn:$("#studyRegionsBtn"),studyCapitalsBtn:$("#studyCapitalsBtn"),studyWondersBtn:$("#studyWondersBtn"),
   wonderImageCard:$("#wonderImageCard"),wonderImage:$("#wonderImage"),wonderImageFallback:$("#wonderImageFallback"),wonderImageSource:$("#wonderImageSource"),
   gameLayout:$("#gameLayout"),mapFullscreenBtn:$("#mapFullscreenBtn"),mapZoomControls:$("#mapZoomControls"),
   zoomInBtn:$("#zoomInBtn"),zoomOutBtn:$("#zoomOutBtn"),zoomResetBtn:$("#zoomResetBtn")
@@ -207,12 +207,38 @@ function applyCityOffset(name,p){
   const user=USER_CITY_OFFSETS[name]||{dx:0,dy:0};
   return{x:p.x+built.dx+user.dx,y:p.y+built.dy+user.dy};
 }
+const WONDER_POINT_OFFSETS={};
+const WONDER_CALIBRATION_VERSION="2.2.15";
+let USER_WONDER_OFFSETS={};
+try{
+  const localVersion=localStorage.getItem("italia-wonder-offsets-version");
+  if(localVersion===WONDER_CALIBRATION_VERSION){
+    const saved=JSON.parse(localStorage.getItem("italia-wonder-offsets")||"{}");
+    if(saved&&typeof saved==="object")USER_WONDER_OFFSETS=saved;
+  }else{
+    localStorage.removeItem("italia-wonder-offsets");
+    localStorage.setItem("italia-wonder-offsets-version",WONDER_CALIBRATION_VERSION);
+  }
+}catch(e){}
+
+function saveUserWonderOffsets(){
+  localStorage.setItem("italia-wonder-offsets",JSON.stringify(USER_WONDER_OFFSETS));
+  localStorage.setItem("italia-wonder-offsets-version",WONDER_CALIBRATION_VERSION);
+}
+function applyWonderOffset(id,p){
+  const built=WONDER_POINT_OFFSETS[id]||{dx:0,dy:0};
+  const user=USER_WONDER_OFFSETS[id]||{dx:0,dy:0};
+  return{x:p.x+built.dx+user.dx,y:p.y+built.dy+user.dy};
+}
+
 function itemXY(item){
   let p;
   if(Number.isFinite(item.x)&&Number.isFinite(item.y))p={x:item.x,y:item.y};
   else if(item.cat==="provinces")p=calibratedCityToMap(item.lat,item.lon);
   else p=geoToMap(item.lat,item.lon);
-  return (item.cat==="provinces"||item.cat==="capitals")?applyCityOffset(item.name,p):p;
+  if(item.cat==="provinces"||item.cat==="capitals")return applyCityOffset(item.name,p);
+  if(item.cat==="wonders")return applyWonderOffset(item.id,p);
+  return p;
 }
 const REGION_CAPITAL_NAMES=new Set(REGIONS.map(r=>r.capital));
 const PROVINCE_ONLY=PROVINCES.filter(p=>!REGION_CAPITAL_NAMES.has(p.name));
@@ -420,7 +446,7 @@ function startGame(){
   state.categories=cats;state.physicalSubs=physicalSubs;state.wonderSubs=wonderSubs;state.direction=els.direction.value;state.timerSeconds=+els.timer.value;
   state.scores=state.players.map(()=>0);state.perPlayerAsked=state.players.map(()=>0);state.questionPools={};state.current=null;state.locked=false;
   saveSetup();els.setupScreen.hidden=true;els.gameScreen.hidden=false;els.endTrainingBtn.hidden=state.mode!=="training";els.finalOverlay.hidden=true;
-  els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode","study-capitals-mode","study-regions-mode","reposition-mode");els.mapControls.innerHTML="";
+  els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode","study-capitals-mode","study-regions-mode","study-wonders-mode","reposition-mode");els.mapControls.innerHTML="";
   renderScoreboard();nextQuestion(true);
 }
 function showSetupError(msg){$("#setupError").textContent=msg;tone("bad")}
@@ -430,7 +456,7 @@ function startStudyMode(){
   els.setupScreen.hidden=true;els.gameScreen.hidden=false;els.finalOverlay.hidden=true;els.handoff.hidden=true;
   els.timerWrap.hidden=true;els.scoreLabel.hidden=true;els.scoreboard.hidden=true;els.endTrainingBtn.hidden=true;
   els.oralControls.hidden=true;els.mapControls.hidden=false;els.judgeControls.hidden=true;els.revealBtn.hidden=true;
-  els.map.classList.remove("study-regions-mode");els.map.classList.add("study-mode","study-capitals-mode");resetMapVisuals();
+  els.map.classList.remove("study-regions-mode","study-wonders-mode");els.map.classList.add("study-mode","study-capitals-mode");resetMapVisuals();
   els.playerLabel.textContent="MODALITÀ STUDIO";els.progressLabel.textContent=`20 regionali · ${PROVINCE_ONLY.length} provinciali`;
   els.promptKicker.textContent="CAPOLUOGHI";els.promptText.textContent="Esplora la carta";
   state.repositioning=false;
@@ -450,12 +476,183 @@ function startStudyMode(){
   $("#resetPositionsBtn").addEventListener("click",resetSavedCityPositions);
   hideResult();renderStudyCapitals();
 }
+function startStudyWonders(){
+  clearTimer();state.mode="study-wonders";state.current=null;state.locked=true;state.repositioning=false;
+  state.studyWonderSubs=["monuments","places","archaeology","nature"];
+  els.setupScreen.hidden=true;els.gameScreen.hidden=false;els.finalOverlay.hidden=true;els.handoff.hidden=true;
+  els.timerWrap.hidden=true;els.scoreLabel.hidden=true;els.scoreboard.hidden=true;els.endTrainingBtn.hidden=true;
+  els.oralControls.hidden=true;els.mapControls.hidden=false;els.judgeControls.hidden=true;els.revealBtn.hidden=true;
+  els.map.classList.remove("study-capitals-mode","study-regions-mode","reposition-mode");
+  els.map.classList.add("study-mode","study-wonders-mode");
+  resetMapVisuals();
+  els.playerLabel.textContent="MODALITÀ STUDIO";els.progressLabel.textContent=`${WONDERS.length} luoghi`;
+  els.promptKicker.textContent="LUOGHI FAMOSI";els.promptText.textContent="Esplora la carta";
+  els.promptHint.textContent="Scegli le categorie da mostrare e tocca un punto per scoprirne il nome.";
+  els.mapControls.innerHTML=`
+    <div class="wonder-study-filters">
+      <label class="wonder-filter monuments"><input type="checkbox" class="study-wonder-filter" value="monuments" checked><span class="wonder-filter-dot"></span> Monumenti</label>
+      <label class="wonder-filter places"><input type="checkbox" class="study-wonder-filter" value="places" checked><span class="wonder-filter-dot"></span> Città d'arte e luoghi celebri</label>
+      <label class="wonder-filter archaeology"><input type="checkbox" class="study-wonder-filter" value="archaeology" checked><span class="wonder-filter-dot"></span> Archeologia</label>
+      <label class="wonder-filter nature"><input type="checkbox" class="study-wonder-filter" value="nature" checked><span class="wonder-filter-dot"></span> Natura</label>
+    </div>
+    <div class="study-edit-actions">
+      <button id="repositionWondersBtn" type="button" class="secondary">✥ RIPOSIZIONA</button>
+      <button id="exportWondersBtn" type="button" class="secondary">⬆ ESPORTA POSIZIONI</button>
+      <button id="resetWondersBtn" type="button" class="secondary">↶ RIPRISTINA</button>
+    </div>`;
+  $$(".study-wonder-filter",els.mapControls).forEach(cb=>cb.addEventListener("change",()=>{
+    state.studyWonderSubs=$$(".study-wonder-filter",els.mapControls).filter(x=>x.checked).map(x=>x.value);
+    renderStudyWonders();hideResult();hideWonderImage();
+  }));
+  $("#repositionWondersBtn").addEventListener("click",toggleWonderRepositionMode);
+  $("#exportWondersBtn").addEventListener("click",exportSavedWonderPositions);
+  $("#resetWondersBtn").addEventListener("click",resetSavedWonderPositions);
+  hideResult();hideWonderImage();renderStudyWonders();
+}
+
+function renderStudyWonders(){
+  els.markerLayer.innerHTML="";
+  const visible=WONDERS.filter(w=>state.studyWonderSubs.includes(w.sub));
+  visible.forEach(w=>{
+    const p=itemXY(w);
+    addStudyWonderMarker(w,p);
+  });
+  els.progressLabel.textContent=`${visible.length} / ${WONDERS.length} luoghi`;
+}
+
+function toggleWonderRepositionMode(){
+  state.repositioning=!state.repositioning;
+  els.map.classList.toggle("reposition-mode",state.repositioning);
+  const b=$("#repositionWondersBtn");
+  if(b)b.textContent=state.repositioning?"✓ FINE RIPOSIZIONA":"✥ RIPOSIZIONA";
+  els.promptHint.textContent=state.repositioning
+    ?"Trascina i punti con mouse, dito o Apple Pencil: la correzione viene salvata su questo dispositivo."
+    :"Scegli le categorie da mostrare e tocca un punto per scoprirne il nome.";
+  if(state.repositioning){
+    els.resultBox.hidden=false;els.resultTitle.textContent="Riposizionamento attivo";
+    els.resultText.textContent="Le correzioni valgono subito anche nelle domande sui luoghi famosi.";
+    els.nextBtn.hidden=true;hideWonderImage();
+  }else hideResult();
+}
+
+function addStudyWonderMarker(item,p){
+  const g=document.createElementNS("http://www.w3.org/2000/svg","g");
+  g.setAttribute("class",`study-wonder-marker ${item.sub}`);
+  g.setAttribute("tabindex","0");g.setAttribute("role","button");
+  g.setAttribute("aria-label",state.repositioning?"Trascina "+item.name:"Scopri "+item.name);
+  g.dataset.id=item.id;
+
+  const halo=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  halo.setAttribute("class","study-selection-halo");
+  halo.setAttribute("cx",p.x);halo.setAttribute("cy",p.y);halo.setAttribute("r","15");g.appendChild(halo);
+
+  const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("cx",p.x);c.setAttribute("cy",p.y);c.setAttribute("r","8");g.appendChild(c);
+
+  let drag=null;
+  g.addEventListener("pointerdown",ev=>{
+    if(!state.repositioning)return;
+    ev.preventDefault();ev.stopPropagation();
+    const sp=svgPointFromClient(ev.clientX,ev.clientY);if(!sp)return;
+    drag={pointerId:ev.pointerId,startPointer:sp,startPoint:{x:+c.getAttribute("cx"),y:+c.getAttribute("cy")},moved:false};
+    try{g.setPointerCapture(ev.pointerId)}catch(e){}
+    g.classList.add("dragging");
+  });
+  g.addEventListener("pointermove",ev=>{
+    if(!state.repositioning||!drag||drag.pointerId!==ev.pointerId)return;
+    ev.preventDefault();ev.stopPropagation();
+    const sp=svgPointFromClient(ev.clientX,ev.clientY);if(!sp)return;
+    const dx=sp.x-drag.startPointer.x,dy=sp.y-drag.startPointer.y;
+    if(Math.hypot(dx,dy)>1.5)drag.moved=true;
+    const x=drag.startPoint.x+dx,y=drag.startPoint.y+dy;
+    c.setAttribute("cx",x);c.setAttribute("cy",y);halo.setAttribute("cx",x);halo.setAttribute("cy",y);
+  });
+  const finish=ev=>{
+    if(!drag||drag.pointerId!==ev.pointerId)return;
+    ev.preventDefault();ev.stopPropagation();
+    const nx=+c.getAttribute("cx"),ny=+c.getAttribute("cy");
+    if(drag.moved){
+      const old=USER_WONDER_OFFSETS[item.id]||{dx:0,dy:0};
+      USER_WONDER_OFFSETS[item.id]={dx:old.dx+(nx-drag.startPoint.x),dy:old.dy+(ny-drag.startPoint.y)};
+      saveUserWonderOffsets();
+      els.resultBox.hidden=false;els.resultTitle.textContent=item.name+" riposizionato";
+      els.resultText.textContent="Nuova posizione memorizzata su questo dispositivo.";els.nextBtn.hidden=true;tone("click");
+    }
+    drag=null;g.classList.remove("dragging");
+  };
+  g.addEventListener("pointerup",finish);g.addEventListener("pointercancel",finish);
+
+  const show=ev=>{
+    if(state.repositioning)return;
+    ev.preventDefault();ev.stopPropagation();
+    els.markerLayer.querySelectorAll(".study-wonder-marker").forEach(m=>m.classList.remove("selected"));
+    g.classList.add("selected");
+    els.resultBox.hidden=false;els.resultTitle.textContent=item.name;
+    els.resultText.textContent=SUB_LABELS[item.sub]||"Luogo famoso";
+    els.nextBtn.hidden=true;loadWonderImage(item);tone("click");
+  };
+  g.addEventListener("click",show);
+  g.addEventListener("keydown",ev=>{if(!state.repositioning&&(ev.key==="Enter"||ev.key===" "))show(ev)});
+  els.markerLayer.appendChild(g);
+}
+
+async function exportSavedWonderPositions(){
+  const ids=Object.keys(USER_WONDER_OFFSETS);
+  if(!ids.length){
+    els.resultBox.hidden=false;els.resultTitle.textContent="Nessuna correzione da esportare";
+    els.resultText.textContent="Prima riposiziona almeno un luogo famoso.";els.nextBtn.hidden=true;return;
+  }
+  const wonders=ids.map(id=>WONDERS.find(w=>w.id===id)).filter(Boolean)
+    .sort((a,b)=>a.name.localeCompare(b.name,"it"))
+    .map(item=>{
+      const base=geoToMap(item.lat,item.lon);
+      const built=WONDER_POINT_OFFSETS[item.id]||{dx:0,dy:0};
+      const user=USER_WONDER_OFFSETS[item.id]||{dx:0,dy:0};
+      return{
+        id:item.id,name:item.name,category:item.sub,
+        dx:+user.dx.toFixed(2),dy:+user.dy.toFixed(2),
+        x:+(base.x+built.dx+user.dx).toFixed(2),
+        y:+(base.y+built.dy+user.dy).toFixed(2)
+      };
+    });
+  const payload={
+    app:"ITALIA!",type:"wonder-position-calibration",version:"2.2.15",
+    exportedAt:new Date().toISOString(),wonders
+  };
+  const text=JSON.stringify(payload,null,2);
+  const file=new File([text],"italia-coordinate-luoghi-famosi.json",{type:"application/json"});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+      await navigator.share({files:[file],title:"ITALIA! – coordinate luoghi famosi",text:"Coordinate corrette dei luoghi famosi"});
+      els.resultBox.hidden=false;els.resultTitle.textContent="Coordinate pronte";
+      els.resultText.textContent="Condividi o salva il file e poi allegalo nella chat: potrò rendere definitive le correzioni su GitHub.";
+      els.nextBtn.hidden=true;return;
+    }
+  }catch(e){if(e?.name==="AbortError")return}
+  const blob=new Blob([text],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="italia-coordinate-luoghi-famosi.json";
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  els.resultBox.hidden=false;els.resultTitle.textContent="Coordinate esportate";
+  els.resultText.textContent="Allega qui il file italia-coordinate-luoghi-famosi.json.";els.nextBtn.hidden=true;
+}
+
+function resetSavedWonderPositions(){
+  if(!Object.keys(USER_WONDER_OFFSETS).length){
+    els.resultBox.hidden=false;els.resultTitle.textContent="Nessuna correzione salvata";
+    els.resultText.textContent="I luoghi stanno già usando le posizioni predefinite dell'app.";els.nextBtn.hidden=true;return;
+  }
+  if(!confirm("Vuoi cancellare tutte le correzioni manuali dei luoghi famosi salvate su questo dispositivo?"))return;
+  USER_WONDER_OFFSETS={};localStorage.removeItem("italia-wonder-offsets");renderStudyWonders();hideWonderImage();
+  els.resultBox.hidden=false;els.resultTitle.textContent="Posizioni ripristinate";
+  els.resultText.textContent="Sono tornate le posizioni predefinite dei luoghi famosi.";els.nextBtn.hidden=true;
+}
+
 function startStudyRegions(){
   clearTimer();state.mode="study-regions";state.current=null;state.locked=true;state.repositioning=false;
   els.setupScreen.hidden=true;els.gameScreen.hidden=false;els.finalOverlay.hidden=true;els.handoff.hidden=true;
   els.timerWrap.hidden=true;els.scoreLabel.hidden=true;els.scoreboard.hidden=true;els.endTrainingBtn.hidden=true;
   els.oralControls.hidden=true;els.mapControls.hidden=false;els.judgeControls.hidden=true;els.revealBtn.hidden=true;
-  els.map.classList.remove("study-capitals-mode","reposition-mode");
+  els.map.classList.remove("study-capitals-mode","study-wonders-mode","reposition-mode");
   els.map.classList.add("study-mode","study-regions-mode");
   resetMapVisuals();
   els.playerLabel.textContent="MODALITÀ STUDIO";els.progressLabel.textContent="20 regioni";
@@ -934,7 +1131,7 @@ function endTraining(){
   els.finalContent.innerHTML=`<div class="final-cup">🧭</div><h2>Allenamento concluso</h2><p>Hai totalizzato <strong>${state.scores[0]||0} punti</strong>.</p><button type="button" class="primary big" id="playAgainFinal">TORNA ALLA HOME</button>`;
   $("#playAgainFinal").addEventListener("click",goHome);
 }
-function goHome(){clearTimer();state.repositioning=false;els.map.classList.remove("reposition-mode");toggleMapFullscreen(false);els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode","study-capitals-mode","study-regions-mode");els.mapControls.innerHTML="";resetMapVisuals()}
+function goHome(){clearTimer();state.repositioning=false;els.map.classList.remove("reposition-mode");toggleMapFullscreen(false);els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode","study-capitals-mode","study-regions-mode","study-wonders-mode");els.mapControls.innerHTML="";resetMapVisuals()}
 function openInfo(){els.infoDialog.showModal?els.infoDialog.showModal():els.infoDialog.setAttribute("open","")}
 function closeInfo(){els.infoDialog.close?els.infoDialog.close():els.infoDialog.removeAttribute("open")}
 
@@ -943,7 +1140,7 @@ els.questions.addEventListener("change",saveSetup);els.timer.addEventListener("c
 els.training.addEventListener("change",()=>{updateTrainingUI();saveSetup()});
 [els.categoryRegion,els.categoryCapitals,els.categoryProvinces,els.categoryPhysical,els.categoryWonders].forEach(el=>el.addEventListener("change",()=>{updateCategoryOptions();saveSetup()}));
 $$(".subcat-physical,.subcat-wonders").forEach(el=>el.addEventListener("change",saveSetup));
-els.direction.addEventListener("change",saveSetup);els.playerNames.addEventListener("input",saveSetup);els.start.addEventListener("click",startGame);els.studyRegionsBtn?.addEventListener("click",startStudyRegions);els.studyCapitalsBtn.addEventListener("click",startStudyMode);
+els.direction.addEventListener("change",saveSetup);els.playerNames.addEventListener("input",saveSetup);els.start.addEventListener("click",startGame);els.studyRegionsBtn?.addEventListener("click",startStudyRegions);els.studyCapitalsBtn.addEventListener("click",startStudyMode);els.studyWondersBtn?.addEventListener("click",startStudyWonders);
 els.mapFullscreenBtn.addEventListener("click",()=>toggleMapFullscreen());
 els.zoomInBtn.addEventListener("click",()=>zoomMap(.75));
 els.zoomOutBtn.addEventListener("click",()=>zoomMap(1.333333));

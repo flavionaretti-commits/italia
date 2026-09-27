@@ -369,3 +369,39 @@ body.map-fullscreen-open{overflow:hidden;overscroll-behavior:none}
   vector-effect:non-scaling-stroke;filter:drop-shadow(0 1px 2px rgba(0,0,0,.28))
 }
 .study-marker.selected .study-selection-halo{opacity:1}
+
+/* ITALIA! v2.2.15 – Studio luoghi famosi */
+.study-wonders-mode .region-shape{pointer-events:none;cursor:default}
+.study-wonders-mode .region-shape:focus,
+.study-wonders-mode .region-shape:focus-visible{outline:none}
+
+.wonder-study-filters{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px
+}
+.wonder-filter{
+  min-height:42px;display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border:1px solid var(--line);border-radius:12px;background:var(--panel2);
+  font-size:12px;font-weight:800;line-height:1.2;cursor:pointer
+}
+.wonder-filter input{width:18px;height:18px;flex:0 0 auto}
+.wonder-filter-dot{width:13px;height:13px;border-radius:50%;flex:0 0 auto}
+.wonder-filter.monuments .wonder-filter-dot,.study-wonder-marker.monuments>circle:last-child{fill:var(--accent2);background:var(--accent2)}
+.wonder-filter.places .wonder-filter-dot,.study-wonder-marker.places>circle:last-child{fill:var(--accent);background:var(--accent)}
+.wonder-filter.archaeology .wonder-filter-dot,.study-wonder-marker.archaeology>circle:last-child{fill:var(--gold);background:var(--gold)}
+.wonder-filter.nature .wonder-filter-dot,.study-wonder-marker.nature>circle:last-child{fill:var(--good);background:var(--good)}
+
+.study-wonder-marker{cursor:pointer}
+.study-wonder-marker>circle:last-child{
+  vector-effect:non-scaling-stroke;stroke:none;stroke-width:0;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.30))
+}
+.study-wonder-marker:focus,.study-wonder-marker:focus-visible{outline:none}
+.study-wonder-marker.selected .study-selection-halo{opacity:1}
+.reposition-mode .study-wonder-marker{cursor:grab}
+.reposition-mode .study-wonder-marker>circle:last-child{
+  stroke:var(--text);stroke-width:3;touch-action:none
+}
+.reposition-mode .study-wonder-marker.dragging{cursor:grabbing}
+.reposition-mode .study-wonder-marker.dragging>circle:last-child{stroke-width:5}
+
+@media(max-width:720px){.wonder-study-filters{grid-template-columns:1fr}}

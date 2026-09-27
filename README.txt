@@ -111,3 +111,11 @@ V2.2.14
 - Aggiunte alla calibrazione ufficiale anche città prima senza offset esplicito, tra cui Napoli, Sassari e Verona.
 - Aggiornata la versione della calibrazione locale a 2.2.14: i vecchi delta locali vengono cancellati una sola volta per evitare doppie correzioni.
 - Corretto anche il percorso dei capoluoghi di regione nel quiz affinché l'offset ufficiale venga applicato una sola volta.
+
+V2.2.15
+- Aggiunta modalità STUDIA I LUOGHI FAMOSI.
+- Mostra tutte le 54 Meraviglie d'Italia sulla stessa carta con filtri indipendenti per Monumenti, Città d'arte e luoghi celebri, Archeologia e Natura.
+- Toccando un punto vengono mostrati nome, categoria e immagine associata.
+- Aggiunti RIPOSIZIONA, ESPORTA POSIZIONI e RIPRISTINA anche per i luoghi famosi.
+- Le correzioni dei luoghi famosi sono salvate separatamente in localStorage e vengono applicate immediatamente anche alle domande del gioco.
+- ESPORTA POSIZIONI produce italia-coordinate-luoghi-famosi.json, pronto per incorporare successivamente le coordinate definitive nella repository.
