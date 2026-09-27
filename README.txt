@@ -104,3 +104,10 @@ V2.2.13
 - Eliminato il quadratino di focus nativo che compariva con il mouse sul desktop.
 - Il capoluogo selezionato mostra ora un sottile anello dorato esterno, senza coprire il puntino blu/arancione.
 - L'anello compare anche con Apple Pencil e scompare automaticamente quando si seleziona un altro capoluogo.
+
+V2.2.14
+- Incorporate 53 ultime rifiniture manuali dei capoluoghi esportate il 27/09/2026.
+- Le nuove correzioni sono state sommate alla calibrazione ufficiale precedente, mantenendo inalterati i capoluoghi non ritoccati.
+- Aggiunte alla calibrazione ufficiale anche città prima senza offset esplicito, tra cui Napoli, Sassari e Verona.
+- Aggiornata la versione della calibrazione locale a 2.2.14: i vecchi delta locali vengono cancellati una sola volta per evitare doppie correzioni.
+- Corretto anche il percorso dei capoluoghi di regione nel quiz affinché l'offset ufficiale venga applicato una sola volta.

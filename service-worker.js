@@ -1,7 +1,7 @@
-const CACHE='italia-v2.2.13';
+const CACHE='italia-v2.2.14';
 const ASSETS=[
   './','./index.html',
-  './style.css?v=2213','./data.js?v=2213','./app.js?v=2213',
+  './style.css?v=2214','./data.js?v=2214','./app.js?v=2214',
   './manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'
 ];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting();});
