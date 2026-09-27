@@ -344,3 +344,20 @@ body.map-fullscreen-open{overflow:hidden;overscroll-behavior:none}
 /* ITALIA! v2.2.6 – esportazione calibrazione capoluoghi */
 .study-edit-actions{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:720px){.study-edit-actions{grid-template-columns:1fr}}
+
+/* ITALIA! v2.2.9 – modalità Studio regioni separata */
+.study-launch-group{display:grid;grid-template-columns:1fr;gap:8px;margin-top:9px}
+.study-launch-group .study-launch{margin-top:0}
+.study-capitals-mode .region-shape{pointer-events:none;cursor:default}
+.study-capitals-mode .region-shape:focus,
+.study-capitals-mode .region-shape:focus-visible{outline:none}
+.study-regions-mode .region-shape{cursor:pointer}
+.study-regions-mode .region-shape:focus,
+.study-regions-mode .region-shape:focus-visible{outline:none}
+.study-regions-mode .region-shape.study-region-selected{
+  fill:color-mix(in srgb,var(--accent) 68%,var(--land))!important;
+}
+.study-regions-note{
+  padding:12px 14px;border:1px solid var(--line);border-radius:14px;
+  background:var(--panel2);font-size:13px;font-weight:750;line-height:1.35;color:var(--muted)
+}

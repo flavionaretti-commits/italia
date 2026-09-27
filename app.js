@@ -25,7 +25,7 @@ const els={
   progressLabel:$("#progressLabel"),scoreLabel:$("#scoreLabel"),scoreboard:$("#scoreboard"),handoff:$("#handoff"),
   handoffName:$("#handoffName"),handoffBtn:$("#handoffBtn"),finalOverlay:$("#finalOverlay"),finalContent:$("#finalContent"),
   homeBtn:$("#homeBtn"),themeBtn:$("#themeBtn"),soundBtn:$("#soundBtn"),infoBtn:$("#infoBtn"),infoDialog:$("#infoDialog"),
-  closeInfo:$("#closeInfo"),restartBtn:$("#restartBtn"),studyCapitalsBtn:$("#studyCapitalsBtn"),
+  closeInfo:$("#closeInfo"),restartBtn:$("#restartBtn"),studyRegionsBtn:$("#studyRegionsBtn"),studyCapitalsBtn:$("#studyCapitalsBtn"),
   wonderImageCard:$("#wonderImageCard"),wonderImage:$("#wonderImage"),wonderImageFallback:$("#wonderImageFallback"),wonderImageSource:$("#wonderImageSource"),
   gameLayout:$("#gameLayout"),mapFullscreenBtn:$("#mapFullscreenBtn"),mapZoomControls:$("#mapZoomControls"),
   zoomInBtn:$("#zoomInBtn"),zoomOutBtn:$("#zoomOutBtn"),zoomResetBtn:$("#zoomResetBtn")
@@ -361,7 +361,7 @@ function svgPointFromClient(clientX,clientY){
 
 function regionPath(i){return $(`.region-shape[data-index="${i}"]`,els.regionsLayer)}
 function resetMapVisuals(){
-  $$(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("prompt-highlight","correct-highlight","wrong-highlight","dim"));
+  $(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("prompt-highlight","correct-highlight","wrong-highlight","dim","study-region-selected"));
   els.markerLayer.innerHTML="";els.lineLayer.innerHTML="";hideWonderImage();
 }
 function setTheme(theme){
@@ -404,17 +404,17 @@ function startGame(){
   state.categories=cats;state.physicalSubs=physicalSubs;state.wonderSubs=wonderSubs;state.direction=els.direction.value;state.timerSeconds=+els.timer.value;
   state.scores=state.players.map(()=>0);state.perPlayerAsked=state.players.map(()=>0);state.questionPools={};state.current=null;state.locked=false;
   saveSetup();els.setupScreen.hidden=true;els.gameScreen.hidden=false;els.endTrainingBtn.hidden=state.mode!=="training";els.finalOverlay.hidden=true;
-  els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode");els.mapControls.innerHTML="";
+  els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode","study-capitals-mode","study-regions-mode","reposition-mode");els.mapControls.innerHTML="";
   renderScoreboard();nextQuestion(true);
 }
 function showSetupError(msg){$("#setupError").textContent=msg;tone("bad")}
 
 function startStudyMode(){
-  clearTimer();state.mode="study";state.current=null;state.locked=true;
+  clearTimer();state.mode="study-capitals";state.current=null;state.locked=true;
   els.setupScreen.hidden=true;els.gameScreen.hidden=false;els.finalOverlay.hidden=true;els.handoff.hidden=true;
   els.timerWrap.hidden=true;els.scoreLabel.hidden=true;els.scoreboard.hidden=true;els.endTrainingBtn.hidden=true;
   els.oralControls.hidden=true;els.mapControls.hidden=false;els.judgeControls.hidden=true;els.revealBtn.hidden=true;
-  els.map.classList.add("study-mode");resetMapVisuals();
+  els.map.classList.remove("study-regions-mode");els.map.classList.add("study-mode","study-capitals-mode");resetMapVisuals();
   els.playerLabel.textContent="MODALITÀ STUDIO";els.progressLabel.textContent=`20 regionali · ${PROVINCE_ONLY.length} provinciali`;
   els.promptKicker.textContent="CAPOLUOGHI";els.promptText.textContent="Esplora la carta";
   state.repositioning=false;
@@ -434,6 +434,28 @@ function startStudyMode(){
   $("#resetPositionsBtn").addEventListener("click",resetSavedCityPositions);
   hideResult();renderStudyCapitals();
 }
+function startStudyRegions(){
+  clearTimer();state.mode="study-regions";state.current=null;state.locked=true;state.repositioning=false;
+  els.setupScreen.hidden=true;els.gameScreen.hidden=false;els.finalOverlay.hidden=true;els.handoff.hidden=true;
+  els.timerWrap.hidden=true;els.scoreLabel.hidden=true;els.scoreboard.hidden=true;els.endTrainingBtn.hidden=true;
+  els.oralControls.hidden=true;els.mapControls.hidden=false;els.judgeControls.hidden=true;els.revealBtn.hidden=true;
+  els.map.classList.remove("study-capitals-mode","reposition-mode");
+  els.map.classList.add("study-mode","study-regions-mode");
+  resetMapVisuals();
+  els.playerLabel.textContent="MODALITÀ STUDIO";els.progressLabel.textContent="20 regioni";
+  els.promptKicker.textContent="REGIONI";els.promptText.textContent="Esplora la carta";
+  els.promptHint.textContent="Tocca una regione per scoprirne il nome.";
+  els.mapControls.innerHTML=`<div class="study-regions-note">Tocca una regione: si colorerà e comparirà il suo nome. Toccandone un'altra, la precedente tornerà normale.</div>`;
+  hideResult();
+}
+function showStudyRegion(idx){
+  $(".region-shape",els.regionsLayer).forEach(p=>p.classList.remove("study-region-selected"));
+  const p=regionPath(idx);if(!p)return;
+  p.classList.add("study-region-selected");
+  els.resultBox.hidden=false;els.resultTitle.textContent=REGIONS[idx].name;
+  els.resultText.textContent="Regione italiana";els.nextBtn.hidden=true;tone("click");
+}
+
 function renderStudyCapitals(){
   els.markerLayer.innerHTML="";
   REGIONS.forEach(r=>{const p=applyCityOffset(r.capital,{x:r.x,y:r.y});addStudyMarker({name:r.capital,x:p.x,y:p.y,type:"region"})});
@@ -779,6 +801,7 @@ function renderScoreboard(){
 }
 
 function onRegionTap(ev,idx){
+  if(state.mode==="study-regions"){ev.preventDefault();showStudyRegion(idx);return}
   if(state.locked||!state.current||els.handoff.hidden===false)return;
   const q=state.current;if(q.dir!=="nameToMap"||q.item.kind!=="region")return;ev.preventDefault();stopTimer();state.locked=true;
   const correct=idx===q.item.regionIndex;regionPath(idx)?.classList.add(correct?"correct-highlight":"wrong-highlight");
@@ -889,7 +912,7 @@ function endTraining(){
   els.finalContent.innerHTML=`<div class="final-cup">🧭</div><h2>Allenamento concluso</h2><p>Hai totalizzato <strong>${state.scores[0]||0} punti</strong>.</p><button type="button" class="primary big" id="playAgainFinal">TORNA ALLA HOME</button>`;
   $("#playAgainFinal").addEventListener("click",goHome);
 }
-function goHome(){clearTimer();state.repositioning=false;els.map.classList.remove("reposition-mode");toggleMapFullscreen(false);els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode");els.mapControls.innerHTML="";resetMapVisuals()}
+function goHome(){clearTimer();state.repositioning=false;els.map.classList.remove("reposition-mode");toggleMapFullscreen(false);els.gameScreen.hidden=true;els.finalOverlay.hidden=true;els.handoff.hidden=true;els.setupScreen.hidden=false;els.scoreboard.hidden=false;els.scoreLabel.hidden=false;els.map.classList.remove("study-mode","study-capitals-mode","study-regions-mode");els.mapControls.innerHTML="";resetMapVisuals()}
 function openInfo(){els.infoDialog.showModal?els.infoDialog.showModal():els.infoDialog.setAttribute("open","")}
 function closeInfo(){els.infoDialog.close?els.infoDialog.close():els.infoDialog.removeAttribute("open")}
 
@@ -898,14 +921,14 @@ els.questions.addEventListener("change",saveSetup);els.timer.addEventListener("c
 els.training.addEventListener("change",()=>{updateTrainingUI();saveSetup()});
 [els.categoryRegion,els.categoryCapitals,els.categoryProvinces,els.categoryPhysical,els.categoryWonders].forEach(el=>el.addEventListener("change",()=>{updateCategoryOptions();saveSetup()}));
 $$(".subcat-physical,.subcat-wonders").forEach(el=>el.addEventListener("change",saveSetup));
-els.direction.addEventListener("change",saveSetup);els.playerNames.addEventListener("input",saveSetup);els.start.addEventListener("click",startGame);els.studyCapitalsBtn.addEventListener("click",startStudyMode);
+els.direction.addEventListener("change",saveSetup);els.playerNames.addEventListener("input",saveSetup);els.start.addEventListener("click",startGame);els.studyRegionsBtn.addEventListener("click",startStudyRegions);els.studyCapitalsBtn.addEventListener("click",startStudyMode);
 els.mapFullscreenBtn.addEventListener("click",()=>toggleMapFullscreen());
 els.zoomInBtn.addEventListener("click",()=>zoomMap(.75));
 els.zoomOutBtn.addEventListener("click",()=>zoomMap(1.333333));
 els.zoomResetBtn.addEventListener("click",resetMapView);
 els.revealBtn.addEventListener("click",revealAnswer);els.correctBtn.addEventListener("click",()=>judge(true));els.wrongBtn.addEventListener("click",()=>judge(false));
 els.nextBtn.addEventListener("click",()=>{tone("next");nextQuestion(false)});els.handoffBtn.addEventListener("click",()=>{els.handoff.hidden=true;tone("next");startTimer()});
-els.endTrainingBtn.addEventListener("click",endTraining);els.homeBtn.addEventListener("click",()=>{if(state.mode==="study"||confirm("Vuoi uscire dalla partita e tornare alla home?"))goHome()});
+els.endTrainingBtn.addEventListener("click",endTraining);els.homeBtn.addEventListener("click",()=>{if(state.mode.startsWith("study")||confirm("Vuoi uscire dalla partita e tornare alla home?"))goHome()});
 els.themeBtn.addEventListener("click",()=>setTheme(state.theme==="dark"?"light":"dark"));els.soundBtn.addEventListener("click",()=>setSound(!state.sound));
 els.infoBtn.addEventListener("click",openInfo);els.closeInfo.addEventListener("click",closeInfo);els.restartBtn.addEventListener("click",()=>{closeInfo();goHome()});
 els.infoDialog.addEventListener("click",e=>{if(e.target===els.infoDialog)closeInfo()});

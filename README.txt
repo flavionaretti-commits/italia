@@ -75,3 +75,8 @@ V2.2.8
 - Rimossi i bordi chiari/scuri attorno ai puntini blu e arancioni dei capoluoghi nella modalità Studio, sia in tema giorno sia in tema notte.
 - Anche hover/focus non aggiungono più un bordo spesso; resta solo un leggero rilievo per mantenere leggibile il punto.
 - In modalità RIPOSIZIONA il bordo di evidenziazione resta attivo, perché serve a distinguere i punti trascinabili.
+
+V2.2.9
+- Aggiunta la modalità STUDIA LE REGIONI: toccando una regione questa si evidenzia e mostra il proprio nome; selezionandone un'altra la precedente torna normale.
+- Nella modalità STUDIA I CAPOLUOGHI le sagome regionali non sono più interattive, evitando il rettangolo di focus quando si tocca uno spazio vuoto.
+- Le due modalità di studio sono ora separate per rendere più chiaro l'obiettivo didattico.
